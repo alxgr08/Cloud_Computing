@@ -1,0 +1,92 @@
+/**
+ * Cliente HTTP centralizado para el API Gateway de BiblioMercado.
+ * Todas las llamadas al backend deben pasar por este módulo.
+ *
+ * Variable de entorno requerida:
+ *   VITE_API_BASE_URL=https://47c36x353h.execute-api.us-east-1.amazonaws.com
+ */
+
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://47c36x353h.execute-api.us-east-1.amazonaws.com'
+
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
+}
+
+/**
+ * Ejecuta una petición HTTP contra el API Gateway.
+ * Lanza un error descriptivo (nunca el objeto crudo) ante cualquier fallo.
+ *
+ * @param {string} path  - Ruta relativa, ej. "/ms1/libros"
+ * @param {RequestInit} options - Opciones fetch adicionales
+ */
+async function request(path, options = {}) {
+  const url = `${BASE_URL}${path}`
+
+  let response
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers: { ...DEFAULT_HEADERS, ...(options.headers || {}) },
+    })
+  } catch (networkError) {
+    // Error de red o CORS
+    const err = new Error(
+      'No se pudo conectar con el servidor. Verifica tu conexión o que el servicio esté disponible.'
+    )
+    err.type = 'NETWORK'
+    console.error(`[apiClient] Network error → ${url}`, networkError)
+    throw err
+  }
+
+  if (!response.ok) {
+    let body = ''
+    try {
+      body = await response.text()
+    } catch {
+      // ignorar
+    }
+    let message
+    if (response.status === 404)      message = 'Recurso no encontrado (404).'
+    else if (response.status === 422)  message = 'Los datos enviados no son válidos (422).'
+    else if (response.status >= 500)   message = 'Error interno del servidor. Intenta más tarde.'
+    else                               message = `Error ${response.status}: ${response.statusText}`
+
+    const err = new Error(message)
+    err.status = response.status
+    err.body = body
+    err.type = 'HTTP'
+    console.error(`[apiClient] HTTP ${response.status} → ${url}`, body)
+    throw err
+  }
+
+  // Respuesta vacía (204 No Content, etc.)
+  const text = await response.text()
+  if (!text || !text.trim()) return null
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
+const apiClient = {
+  get:    (path)       => request(path, { method: 'GET' }),
+  post:   (path, body) => request(path, { method: 'POST',   body: JSON.stringify(body) }),
+  put:    (path, body) => request(path, { method: 'PUT',    body: JSON.stringify(body) }),
+  patch:  (path, body) => request(path, { method: 'PATCH',  body: JSON.stringify(body) }),
+  delete: (path)       => request(path, { method: 'DELETE' }),
+}
+
+/**
+ * Alias funcional compatible con el patrón de la guía del proyecto.
+ * Permite importar: import { apiRequest } from "./apiClient"
+ */
+export async function apiRequest(endpoint, options = {}) {
+  return request(endpoint, options)
+}
+
+export default apiClient

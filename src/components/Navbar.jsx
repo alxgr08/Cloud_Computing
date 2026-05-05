@@ -1,4 +1,15 @@
 import { useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
+
+const NAV_LINKS = [
+  { to: '/',          label: 'Inicio' },
+  { to: '/libros',    label: '📚 Libros' },
+  { to: '/catalogo',  label: '🔗 Catálogo stats' },
+  { to: '/pedidos',   label: '🛒 Pedidos' },
+  { to: '/resenas',   label: '⭐ Reseñas' },
+  { to: '/analytics', label: '📈 Analytics' },
+  { to: '/api-test',  label: '🔌 API Test' },
+]
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -11,12 +22,12 @@ function Navbar() {
     <header className="navbar">
       <div className="navbar__container">
         {/* Logo */}
-        <div className="navbar__brand">
+        <Link to="/" className="navbar__brand" onClick={closeMenu}>
           <span className="navbar__logo-icon">📚</span>
           <span className="navbar__logo-text">
             Biblio<em>Mercado</em>
           </span>
-        </div>
+        </Link>
 
         {/* Hamburger (mobile) */}
         <button
@@ -33,36 +44,19 @@ function Navbar() {
         {/* Links */}
         <nav className={`navbar__nav ${menuOpen ? 'navbar__nav--open' : ''}`}>
           <ul className="navbar__links">
-            <li>
-              <a href="#inicio" onClick={closeMenu}>
-                Inicio
-              </a>
-            </li>
-            <li>
-              <a href="#explorar" onClick={closeMenu}>
-                Explorar libros
-              </a>
-            </li>
-            <li>
-              <a href="#publicar" className="navbar__link--accent" onClick={closeMenu}>
-                Publicar libro
-              </a>
-            </li>
-            <li>
-              <a href="#carrito" onClick={closeMenu}>
-                🛒&nbsp;Carrito
-              </a>
-            </li>
+            {NAV_LINKS.map(({ to, label }) => (
+              <li key={to}>
+                <NavLink
+                  to={to}
+                  end={to === '/'}
+                  className={({ isActive }) => isActive ? 'navbar__link--active' : ''}
+                  onClick={closeMenu}
+                >
+                  {label}
+                </NavLink>
+              </li>
+            ))}
           </ul>
-
-          <div className="navbar__auth">
-            <a href="#login" className="btn btn--outline-nav" onClick={closeMenu}>
-              Iniciar sesión
-            </a>
-            <a href="#register" className="btn btn--accent" onClick={closeMenu}>
-              Registrarse
-            </a>
-          </div>
         </nav>
       </div>
     </header>
