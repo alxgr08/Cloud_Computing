@@ -32,7 +32,12 @@ export default function PerfilClientePage() {
         </div>
 
         {loading && <LoadingState message="Cargando perfil del cliente…" />}
-        {!loading && error && <ErrorState message={error} onRetry={refetch} />}
+        {!loading && error && (
+          <ErrorState
+            message={`Ruta /perfil-cliente/${id} no encontrada o cliente no disponible. Detalle: ${error}`}
+            onRetry={refetch}
+          />
+        )}
         {!loading && !error && !cliente && (
           <EmptyState message="No se encontró el cliente solicitado." icon="👤" />
         )}

@@ -63,7 +63,15 @@ export default function CatalogoPage() {
         </div>
 
         {loading && <LoadingState message="Cargando catálogo enriquecido desde MS4…" />}
-        {!loading && error && <ErrorState message={error} onRetry={refetch} />}
+        {!loading && error && (
+          <>
+            <ErrorState message={error} onRetry={refetch} />
+            <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#92400e', background: '#fef3c7', padding: '0.75rem 1rem', borderRadius: '0.5rem' }}>
+              ⚠️ El endpoint <code>/catalogo-con-stats</code> está fallando en backend/agregador.
+              MS4 sigue activo porque <code>/detalle-libro/1</code> responde correctamente.
+            </p>
+          </>
+        )}
         {!loading && !error && items.length === 0 && (
           <EmptyState message="No se encontraron libros en el catálogo enriquecido." icon="🔗" />
         )}

@@ -1,9 +1,12 @@
 /**
  * MS4 — Agregador
  * API Gateway: SIN prefijo /ms4.
- * Rutas reales confirmadas:
- *   GET /perfil-cliente/1 ✔  GET /detalle-libro/1 ✔
- *   GET /ms4/perfil-cliente/1 ✖ (404)
+ * Rutas reales (diagnóstico 2026-05):
+ *   GET /detalle-libro/1       ✔  (healthCheck)
+ *   GET /ms4/detalle-libro/1   ✔
+ *   GET /perfil-cliente/1      ✖ 404
+ *   GET /ms4/perfil-cliente/1  ✖ 404
+ *   GET /catalogo-con-stats    ✖ 503 / error interno
  * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms4/docs
  */
 
