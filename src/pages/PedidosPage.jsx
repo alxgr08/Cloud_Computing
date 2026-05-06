@@ -25,7 +25,6 @@ import {
   getPedidos,
   createPedido,
 } from '../services/ms2PedidosService'
-import { apiRequest } from '../services/apiClient'
 
 const METODOS_PAGO = ['tarjeta', 'efectivo', 'transferencia', 'paypal']
 
@@ -122,7 +121,7 @@ export default function PedidosPage() {
   async function handleCargarTodos() {
     setLoadingAll(true); setErrorAll(null); setAllPedidos(null)
     try {
-      const data = await apiRequest('/ms2/pedidos', { timeoutMs: 60_000 })
+      const data = await getPedidos()
       setAllPedidos(Array.isArray(data) ? data : [])
     } catch (err) { setErrorAll(err.message) }
     finally { setLoadingAll(false) }
