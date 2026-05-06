@@ -110,12 +110,17 @@ export default function LibrosPage() {
         genero_id:    form.genero_id    ? Number(form.genero_id)    : undefined,
         editorial_id: form.editorial_id ? Number(form.editorial_id) : undefined,
       }
+      console.log('[createLibro] URL esperada:', `${import.meta.env.VITE_API_BASE_URL || '(fallback dev)'}/libros`)
+      console.log('[createLibro] payload:', payload)
       await createLibro(payload)
       setForm(EMPTY_FORM)
       setShowForm(false)
       await fetchAll()
     } catch (err) {
-      setFormError(err.message)
+      const msg = (err.type === 'CORS_OR_NETWORK' || err.type === 'NETWORK')
+        ? `POST /libros fue bloqueado por CORS/preflight. Verifica que la URL sea /libros sin barra final y sin headers extra. Detalle: ${err.message}`
+        : err.message
+      setFormError(msg)
     } finally {
       setSubmitting(false)
     }

@@ -74,6 +74,10 @@ export default function PedidosPage() {
   const [allPedidos,      setAllPedidos]      = useState(null)
   const [loadingAll,      setLoadingAll]      = useState(false)
   const [errorAll,        setErrorAll]        = useState(null)
+  const [clienteIdBInput, setClienteIdBInput] = useState('1')
+  const [clienteResult,   setClienteResult]   = useState(null)
+  const [loadingClienteB, setLoadingClienteB] = useState(false)
+  const [errorClienteB,   setErrorClienteB]   = useState(null)
   const [showForm,        setShowForm]        = useState(false)
   const [form,            setForm]            = useState(EMPTY_FORM)
   const [formError,       setFormError]       = useState(null)
@@ -93,6 +97,15 @@ export default function PedidosPage() {
     try { setPedidoResult(await getPedidoById(Number(pedidoIdInput))) }
     catch (err) { setErrorPedidoId(err.message) }
     finally { setLoadingPedidoId(false) }
+  }
+
+  async function handleBuscarClienteById(e) {
+    e.preventDefault()
+    if (!clienteIdBInput) return
+    setLoadingClienteB(true); setErrorClienteB(null); setClienteResult(null)
+    try { setClienteResult(await getClienteById(Number(clienteIdBInput))) }
+    catch (err) { setErrorClienteB(err.message) }
+    finally { setLoadingClienteB(false) }
   }
 
   async function handleBuscarPorCliente(e) {
@@ -215,6 +228,21 @@ export default function PedidosPage() {
           {!loadingPedidoId && errorPedidoId && <ErrorState message={errorPedidoId} onRetry={handleBuscarPedido} />}
           {!loadingPedidoId && pedidoResult && (
             <div className="table-wrapper"><table className="data-table">{THEAD}<tbody><PedidoRow p={pedidoResult} /></tbody></table></div>
+          )}
+        </section>
+
+        <section className="search-section">
+          <h2 className="section-title">🪪 Buscar cliente por ID</h2>
+          <form className="search-inline" onSubmit={handleBuscarClienteById}>
+            <input type="number" min="1" value={clienteIdBInput} onChange={(e) => setClienteIdBInput(e.target.value)} placeholder="ID del cliente" className="input-inline" />
+            <button type="submit" className="btn btn--primary" disabled={loadingClienteB}>{loadingClienteB ? 'Buscando…' : 'Buscar cliente'}</button>
+          </form>
+          {loadingClienteB && <LoadingState message="Cargando cliente…" />}
+          {!loadingClienteB && errorClienteB && <ErrorState message={errorClienteB} />}
+          {!loadingClienteB && clienteResult && (
+            <pre className="apitest-card__pre" style={{ marginTop: '0.75rem' }}>
+              {JSON.stringify(clienteResult, null, 2).slice(0, 1000)}
+            </pre>
           )}
         </section>
 

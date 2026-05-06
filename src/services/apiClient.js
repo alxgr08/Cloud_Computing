@@ -51,7 +51,9 @@ async function request(path, options = {}) {
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
   if (isDev) {
-    console.log(`[apiClient] → ${method} ${url}${fetchOptions.body ? ` BODY: ${String(fetchOptions.body).slice(0, 200)}` : ''}`)
+    console.log(`[apiClient] ${method} ${url}`)
+    console.log('[apiClient headers]', headers)
+    if (fetchOptions.body) console.log('[apiClient body]', fetchOptions.body.slice(0, 400))
   }
 
   let response
