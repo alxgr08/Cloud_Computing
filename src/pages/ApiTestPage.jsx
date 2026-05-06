@@ -5,41 +5,36 @@
  * Esta página prueba simultáneamente todos los microservicios y muestra
  * el resultado crudo en pantalla. Sirve como evidencia para la rúbrica.
  *
- * MS3: se prueban 4 variantes de ruta para detectar el prefijo correcto.
- *   /ms3/health, /ms3/resenas  → pueden dar 404 si MS3 está en la raíz.
- *   /health, /resenas          → MS3 montado en raíz (verificado en producción).
+ * Rutas reales confirmadas (sin prefijos /ms1, /ms3, /ms4, /ms5):
+ *   MS1: /libros, /autores, /generos
+ *   MS2: /ms2/pedidos/1, /ms2/clientes/1    (MS2 sí usa prefijo)
+ *   MS3: /resenas?libro_id=1
+ *   MS4: /perfil-cliente/1, /detalle-libro/1
+ *   MS5: /top-autores, /ventas-por-genero, /rating-por-genero, /libros-mas-vendidos
  */
 import { useState, useCallback } from 'react'
-import { catalogoService }  from '../services/catalogoService'
-import { pedidosService }   from '../services/pedidosService'
-import { resenasService }   from '../services/resenasService'
-import { agregadorService } from '../services/agregadorService'
-import { analyticsService } from '../services/analyticsService'
-import { apiRequest }       from '../services/apiClient'
+import { apiRequest } from '../services/apiClient'
 
 // ── Checks estándar ────────────────────────────────────────────────────────────
 const CHECKS = [
-  // MS1
-  { key: 'ms1_health',   label: 'MS1 — GET /ms1/health',         fetch: () => catalogoService.healthCheck(), badge: 'MS1' },
-  { key: 'ms1_libros',   label: 'MS1 — GET /ms1/libros/',         fetch: () => catalogoService.getLibros(),    badge: 'MS1' },
-  { key: 'ms1_autores',  label: 'MS1 — GET /ms1/autores/',        fetch: () => catalogoService.getAutores(),   badge: 'MS1' },
-  // MS2
-  { key: 'ms2_clientes', label: 'MS2 — GET /ms2/clientes  [health]', fetch: () => pedidosService.getClientes(), badge: 'MS2' },
-  { key: 'ms2_pedidos',  label: 'MS2 — GET /ms2/pedidos',         fetch: () => pedidosService.getPedidos(),    badge: 'MS2' },
-  // MS3 — diagnóstico de 4 variantes de ruta
-  { key: 'ms3_root_health',  label: 'MS3 diag — GET /health  [raíz]',       fetch: () => apiRequest('/health'),            badge: 'MS3', diag: true },
-  { key: 'ms3_root_resenas', label: 'MS3 diag — GET /resenas  [raíz]',      fetch: () => apiRequest('/resenas'),           badge: 'MS3', diag: true },
-  { key: 'ms3_pfx_health',   label: 'MS3 diag — GET /ms3/health  [/ms3]',   fetch: () => apiRequest('/ms3/health'),        badge: 'MS3', diag: true },
-  { key: 'ms3_pfx_resenas',  label: 'MS3 diag — GET /ms3/resenas  [/ms3]',  fetch: () => apiRequest('/ms3/resenas'),       badge: 'MS3', diag: true },
-  { key: 'ms3_resenas',      label: 'MS3 — GET /resenas  [servicio]',        fetch: () => resenasService.getResenas(),      badge: 'MS3' },
-  { key: 'ms3_stats',        label: 'MS3 — GET /resenas/stats/libro/1',      fetch: () => resenasService.getStatsLibro(1), badge: 'MS3' },
-  // MS4
-  { key: 'ms4_health',       label: 'MS4 — GET /ms4/health',                fetch: () => agregadorService.healthCheck(),           badge: 'MS4' },
-  { key: 'ms4_catalogo',     label: 'MS4 — GET /ms4/catalogo-con-stats  [45 s]', fetch: () => agregadorService.getCatalogoConStats(), badge: 'MS4' },
-  // MS5
-  { key: 'ms5_health',       label: 'MS5 — GET /ms5/health',                fetch: () => analyticsService.healthCheck(),           badge: 'MS5' },
-  { key: 'ms5_top_autores',  label: 'MS5 — GET /ms5/top-autores',           fetch: () => analyticsService.getTopAutores(),         badge: 'MS5' },
-  { key: 'ms5_ventas',       label: 'MS5 — GET /ms5/ventas-por-genero',     fetch: () => analyticsService.getVentasPorGenero(),    badge: 'MS5' },
+  // MS1 — SIN prefijo /ms1
+  { key: 'ms1_libros',        label: 'MS1 — GET /libros?limit=3',          fetch: () => apiRequest('/libros?limit=3'),              badge: 'MS1' },
+  { key: 'ms1_autores',       label: 'MS1 — GET /autores?limit=3',         fetch: () => apiRequest('/autores?limit=3'),             badge: 'MS1' },
+  { key: 'ms1_generos',       label: 'MS1 — GET /generos',                 fetch: () => apiRequest('/generos'),                    badge: 'MS1' },
+  // MS2 — CON prefijo /ms2
+  { key: 'ms2_pedido',        label: 'MS2 — GET /ms2/pedidos/1',           fetch: () => apiRequest('/ms2/pedidos/1'),               badge: 'MS2' },
+  { key: 'ms2_cliente',       label: 'MS2 — GET /ms2/clientes/1',          fetch: () => apiRequest('/ms2/clientes/1'),              badge: 'MS2' },
+  // MS3 — SIN prefijo /ms3
+  { key: 'ms3_resenas',       label: 'MS3 — GET /resenas?libro_id=1',      fetch: () => apiRequest('/resenas?libro_id=1'),          badge: 'MS3' },
+  // MS4 — SIN prefijo /ms4
+  { key: 'ms4_perfil',        label: 'MS4 — GET /perfil-cliente/1',        fetch: () => apiRequest('/perfil-cliente/1'),            badge: 'MS4' },
+  { key: 'ms4_detalle',       label: 'MS4 — GET /detalle-libro/1',         fetch: () => apiRequest('/detalle-libro/1'),             badge: 'MS4' },
+  { key: 'ms4_catalogo',      label: 'MS4 — GET /catalogo-con-stats  [45 s]', fetch: () => apiRequest('/catalogo-con-stats', { timeoutMs: 45_000 }), badge: 'MS4' },
+  // MS5 — SIN prefijo /ms5
+  { key: 'ms5_top_autores',   label: 'MS5 — GET /top-autores',             fetch: () => apiRequest('/top-autores'),                badge: 'MS5' },
+  { key: 'ms5_ventas',        label: 'MS5 — GET /ventas-por-genero',       fetch: () => apiRequest('/ventas-por-genero'),           badge: 'MS5' },
+  { key: 'ms5_rating',        label: 'MS5 — GET /rating-por-genero',       fetch: () => apiRequest('/rating-por-genero'),           badge: 'MS5' },
+  { key: 'ms5_libros',        label: 'MS5 — GET /libros-mas-vendidos',     fetch: () => apiRequest('/libros-mas-vendidos'),         badge: 'MS5' },
 ]
 
 const BADGE_COLORS = {
@@ -119,14 +114,6 @@ export default function ApiTestPage() {
             <div className="apitest-summary__chip apitest-summary__chip--pending">⏳ {pending} pendiente{pending !== 1 ? 's' : ''}</div>
           )}
           <span className="apitest-summary__total">Total: {total} endpoints</span>
-        </div>
-
-        {/* ── Nota MS3 ── */}
-        <div className="apitest-note" style={{ marginBottom: '1rem', borderLeft: '4px solid #7c3aed', paddingLeft: '0.75rem' }}>
-          <strong>Diagnóstico MS3:</strong> se prueban 4 variantes de ruta para detectar el prefijo correcto.
-          Las filas marcadas con <em>diag</em> son exploratorias; el resultado determina qué prefijo usar
-          en <code>resenasService</code>. Si <code>/resenas</code> retorna 200 y <code>/ms3/resenas</code> retorna 404,
-          el prefijo correcto es vacío (MS3 montado en raíz del API Gateway).
         </div>
 
         {/* ── Resultados ── */}

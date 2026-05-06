@@ -1,6 +1,6 @@
 /**
  * CatalogoPage — Catálogo enriquecido con estadísticas
- * Consume MS4: GET /ms4/catalogo-con-stats
+ * Consume MS4: GET /catalogo-con-stats
  */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -40,7 +40,7 @@ export default function CatalogoPage() {
         <div className="page-header">
           <div>
             <h1 className="page-title">🔗 Catálogo con estadísticas</h1>
-            <p className="page-badge">MS4 · GET /ms4/catalogo-con-stats</p>
+            <p className="page-badge">MS4 · GET /catalogo-con-stats</p>
           </div>
           <Link to="/libros" className="btn btn--outline-dark">
             Ir a Libros (MS1)

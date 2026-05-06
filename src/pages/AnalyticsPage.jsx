@@ -1,6 +1,6 @@
 /**
  * AnalyticsPage — Dashboard de métricas y estadísticas
- * Consume MS5: GET /ms5/ventas-por-genero, /top-autores, /top-clientes,
+ * Consume MS5: GET /ventas-por-genero, /top-autores, /top-clientes,
  *                   /rating-por-genero, /libros-mas-vendidos
  */
 import { useEffect, useState, useCallback } from 'react'
@@ -104,7 +104,7 @@ export default function AnalyticsPage() {
         <div className="page-header">
           <div>
             <h1 className="page-title">📈 Dashboard de Analytics</h1>
-            <p className="page-badge">MS5 · /ms5/ventas-por-genero · /ms5/top-autores · /ms5/top-clientes · /ms5/rating-por-genero · /ms5/libros-mas-vendidos</p>
+            <p className="page-badge">MS5 · /ventas-por-genero · /top-autores · /top-clientes · /rating-por-genero · /libros-mas-vendidos</p>
           </div>
         </div>
 
@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
           {/* Ventas por género */}
           <section className="analytics-section">
             <h2 className="analytics-section__title">🏷️ Ventas por género</h2>
-            <p className="analytics-section__badge">GET /ms5/ventas-por-genero</p>
+            <p className="analytics-section__badge">GET /ventas-por-genero</p>
             {ventas.loading ? (
               <LoadingState message="Cargando…" />
             ) : ventas.error ? (
@@ -171,7 +171,7 @@ export default function AnalyticsPage() {
           {/* Top autores */}
           <section className="analytics-section">
             <h2 className="analytics-section__title">✍️ Top autores</h2>
-            <p className="analytics-section__badge">GET /ms5/top-autores</p>
+            <p className="analytics-section__badge">GET /top-autores</p>
             {autores.loading ? (
               <LoadingState message="Cargando…" />
             ) : autores.error ? (
@@ -203,7 +203,7 @@ export default function AnalyticsPage() {
           {/* Top clientes */}
           <section className="analytics-section">
             <h2 className="analytics-section__title">👥 Top clientes</h2>
-            <p className="analytics-section__badge">GET /ms5/top-clientes</p>
+            <p className="analytics-section__badge">GET /top-clientes</p>
             {clientes.loading ? (
               <LoadingState message="Cargando…" />
             ) : clientes.error ? (
@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
           {/* Rating por género */}
           <section className="analytics-section">
             <h2 className="analytics-section__title">⭐ Rating por género</h2>
-            <p className="analytics-section__badge">GET /ms5/rating-por-genero</p>
+            <p className="analytics-section__badge">GET /rating-por-genero</p>
             {rating.loading ? (
               <LoadingState message="Cargando…" />
             ) : rating.error ? (
@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
           {/* Libros más vendidos */}
           <section className="analytics-section analytics-section--wide">
             <h2 className="analytics-section__title">🏆 Libros más vendidos</h2>
-            <p className="analytics-section__badge">GET /ms5/libros-mas-vendidos</p>
+            <p className="analytics-section__badge">GET /libros-mas-vendidos</p>
             {masVend.loading ? (
               <LoadingState message="Cargando…" />
             ) : masVend.error ? (

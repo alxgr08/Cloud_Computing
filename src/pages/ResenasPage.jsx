@@ -1,6 +1,6 @@
 /**
  * ResenasPage — Gestión de reseñas
- * Consume MS3: GET /ms3/resenas, POST /ms3/resenas, DELETE /ms3/resenas/:id
+ * Consume MS3: GET /resenas, POST /resenas, DELETE /resenas/:id
  */
 import { useState, useEffect, useCallback } from 'react'
 import LoadingState from '../components/common/LoadingState'
@@ -39,7 +39,7 @@ export default function ResenasPage() {
     setLoading(true)
     setError(null)
     try {
-      const data = await getResenas()
+      const data = await getResenas({})  // GET /resenas (all)
       setResenas(Array.isArray(data) ? data : [])
     } catch (err) {
       setError(err.message)
@@ -75,10 +75,15 @@ export default function ResenasPage() {
         rating:     rat,
         comentario: form.comentario.trim(),
       }
-      await createResena(payload)
+      const created = await createResena(payload)
+      // Optimistic update: add new review to top of list immediately
+      if (created && created.id) {
+        setResenas((prev) => [created, ...prev.filter((r) => r.id !== created.id)])
+      }
       setForm(EMPTY_FORM)
       setShowForm(false)
-      await fetchResenas()
+      // Background re-fetch to sync with server
+      fetchResenas()
     } catch (err) {
       setFormError(err.message)
     } finally {
@@ -105,7 +110,7 @@ export default function ResenasPage() {
         <div className="page-header">
           <div>
             <h1 className="page-title">⭐ Reseñas</h1>
-            <p className="page-badge">MS3 · GET /ms3/resenas · POST /ms3/resenas</p>
+            <p className="page-badge">MS3 · GET /resenas · POST /resenas</p>
           </div>
           <button className="btn btn--accent" onClick={() => setShowForm(!showForm)}>
             {showForm ? 'Cancelar' : '+ Nueva reseña'}

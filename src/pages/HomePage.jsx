@@ -8,14 +8,17 @@ import Hero from '../components/Hero'
 import apiClient from '../services/apiClient'
 
 // Health check paths verificados en vivo contra el API Gateway.
-// MS2: no tiene /health → usa /clientes.
-// MS3: montado en raíz, NO en /ms3 → usa /resenas (no /ms3/resenas).
+// MS1: usa /libros?limit=1 (no hay /health, /ms1/health → 404).
+// MS2: usa /ms2/clientes/1 (registro individual, más ligero que la colección).
+// MS3: montado en raíz, NO en /ms3 → usa /resenas?limit=1.
+// MS4: usa /detalle-libro/1 (no hay /ms4/health → 404).
+// MS5: usa /top-autores (no hay /ms5/health → 404).
 const SERVICES = [
-  { id: 'ms1', name: 'MS1 — Catálogo',  path: '/ms1/health',  icon: '📚' },
-  { id: 'ms2', name: 'MS2 — Pedidos',   path: '/ms2/clientes', icon: '🛒' },
-  { id: 'ms3', name: 'MS3 — Reseñas',   path: '/resenas',     icon: '⭐' },
-  { id: 'ms4', name: 'MS4 — Agregador', path: '/ms4/health',  icon: '🔗' },
-  { id: 'ms5', name: 'MS5 — Analytics', path: '/ms5/health',  icon: '📊' },
+  { id: 'ms1', name: 'MS1 — Catálogo',  path: '/libros?limit=1',  icon: '📚' },
+  { id: 'ms2', name: 'MS2 — Pedidos',   path: '/ms2/clientes/1',  icon: '🛒' },
+  { id: 'ms3', name: 'MS3 — Reseñas',   path: '/resenas?limit=1', icon: '⭐' },
+  { id: 'ms4', name: 'MS4 — Agregador', path: '/detalle-libro/1', icon: '🔗' },
+  { id: 'ms5', name: 'MS5 — Analytics', path: '/top-autores',     icon: '📊' },
 ]
 
 const MODULES = [

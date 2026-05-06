@@ -18,8 +18,8 @@ const P = '/ms2'
 
 // ── Health ────────────────────────────────────────────────────────────────────
 
-/** Health check — GET /ms2/clientes (más liviano que /pedidos). */
-export const healthCheck = () => apiClient.get(`${P}/clientes`)
+/** Health check — GET /ms2/clientes/1 (registro individual, más ligero que la colección). */
+export const healthCheck = () => apiClient.get(`${P}/clientes/1`)
 
 // ── Pedidos ───────────────────────────────────────────────────────────────────
 

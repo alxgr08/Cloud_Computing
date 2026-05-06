@@ -1,48 +1,49 @@
 /**
  * MS3 — Reseñas
- * Gestiona reseñas de libros.
- *
- * IMPORTANTE: En el API Gateway de AWS, MS3 está montado en la raíz,
- * NO bajo el prefijo /ms3. Verificado en vivo:
- *   GET /resenas        → 200 ✔
- *   GET /health         → 200 {"status":"ok","vm":"vm2"} ✔
- *   GET /ms3/resenas    → 404 ✖
- *   GET /ms3/health     → 404 ✖
+ * API Gateway: SIN prefijo /ms3.
+ * Rutas reales confirmadas:
+ *   GET /resenas?libro_id=1 ✔  GET /resenas/{id} ✔
+ *   GET /ms3/resenas ✖ (404)
  * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms3/docs
  */
 
-import apiClient from './apiClient'
+import apiClient, { apiRequest } from './apiClient'
 
-// Prefijo vacío: MS3 responde en la raíz del API Gateway.
-const P = ''
+/** Construye query string desde un objeto, omitiendo valores null/vacíos. */
+function qs(params = {}) {
+  const entries = Object.entries(params).filter(([, v]) => v != null && v !== '')
+  return entries.length
+    ? '?' + entries.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&')
+    : ''
+}
 
 // ── Health ────────────────────────────────────────────────────────────────────
 
-/** Health check — GET /resenas (MS3 montado en raíz). */
-export const healthCheck = () => apiClient.get(`${P}/resenas`)
+/** Health check — GET /resenas?limit=1 */
+export const healthCheck = () => apiClient.get(`/resenas?limit=1`)
 
 // ── Reseñas ───────────────────────────────────────────────────────────────────
 
-/** [Rúbrica MS3 · GET] Lista todas las reseñas. */
-export const getResenas = () => apiClient.get(`${P}/resenas`)
+/** [Rúbrica MS3 · GET] Lista reseñas. Acepta params: { libro_id, cliente_id, rating, limit, skip }. */
+export const getResenas = (params) => apiRequest(`/resenas${qs(params)}`)
 
 /** Obtiene una reseña por su ID. */
-export const getResenaById = (id) => apiClient.get(`${P}/resenas/${id}`)
+export const getResenaById = (id) => apiClient.get(`/resenas/${id}`)
 
 /** Reseñas filtradas por libro. */
-export const getResenasPorLibro = (libroId) => apiClient.get(`${P}/resenas/libro/${libroId}`)
+export const getResenasPorLibro = (libroId) => apiClient.get(`/resenas/libro/${libroId}`)
 
 /** Reseñas filtradas por cliente. */
-export const getResenasPorCliente = (clienteId) => apiClient.get(`${P}/resenas/cliente/${clienteId}`)
+export const getResenasPorCliente = (clienteId) => apiClient.get(`/resenas/cliente/${clienteId}`)
 
 /** Rating promedio de un libro. */
-export const getStatsLibro = (libroId) => apiClient.get(`${P}/resenas/stats/libro/${libroId}`)
+export const getStatsLibro = (libroId) => apiClient.get(`/resenas/stats/libro/${libroId}`)
 
 /** [Rúbrica MS3 · POST] Crea una nueva reseña. */
-export const createResena = (data) => apiClient.post(`${P}/resenas`, data)
+export const createResena = (data) => apiClient.post(`/resenas`, data)
 
-/** Actualiza una reseña existente (PATCH según Swagger de MS3). */
-export const updateResena = (id, data) => apiClient.patch(`${P}/resenas/${id}`, data)
+/** Actualiza una reseña existente (PATCH). */
+export const updateResena = (id, data) => apiClient.patch(`/resenas/${id}`, data)
 
 /** Elimina una reseña por su ID. */
-export const deleteResena = (id) => apiClient.delete(`${P}/resenas/${id}`)
+export const deleteResena = (id) => apiClient.delete(`/resenas/${id}`)

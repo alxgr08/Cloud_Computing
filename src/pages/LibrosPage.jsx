@@ -1,7 +1,7 @@
 /**
  * LibrosPage — Catálogo de libros
- * Consume MS1: GET /ms1/libros, POST /ms1/libros, DELETE /ms1/libros/:id
- * También consume /ms1/autores, /ms1/generos, /ms1/editoriales para los selects.
+ * Consume MS1: GET /libros, POST /libros, DELETE /libros/:id
+ * También consume /autores, /generos, /editoriales para los selects.
  */
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -138,7 +138,7 @@ export default function LibrosPage() {
         <div className="page-header">
           <div>
             <h1 className="page-title">📚 Catálogo de libros</h1>
-            <p className="page-badge">MS1 · GET /ms1/libros · POST /ms1/libros</p>
+            <p className="page-badge">MS1 · GET /libros · POST /libros</p>
           </div>
           <button className="btn btn--accent" onClick={() => setShowForm(!showForm)}>
             {showForm ? 'Cancelar' : '+ Nuevo libro'}

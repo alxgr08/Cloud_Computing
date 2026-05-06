@@ -1,6 +1,6 @@
 /**
  * DetalleLibroPage — Detalle completo de un libro
- * Consume MS4: GET /ms4/detalle-libro/:id
+ * Consume MS4: GET /detalle-libro/:id
  */
 import { useParams, Link } from 'react-router-dom'
 import { useApi }          from '../hooks/useApi'
@@ -30,7 +30,7 @@ export default function DetalleLibroPage() {
         <div className="page-header">
           <div>
             <h1 className="page-title">📖 Detalle del libro</h1>
-            <p className="page-badge">MS4 · GET /ms4/detalle-libro/{id}</p>
+            <p className="page-badge">MS4 · GET /detalle-libro/{id}</p>
           </div>
           <Link to="/libros" className="btn btn--outline-dark">
             ← Volver al catálogo

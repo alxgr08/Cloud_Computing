@@ -1,6 +1,6 @@
 /**
  * PerfilClientePage — Perfil completo de un cliente
- * Consume MS4: GET /ms4/perfil-cliente/:id
+ * Consume MS4: GET /perfil-cliente/:id
  */
 import { useParams, Link } from 'react-router-dom'
 import { useApi }           from '../hooks/useApi'
@@ -24,7 +24,7 @@ export default function PerfilClientePage() {
         <div className="page-header">
           <div>
             <h1 className="page-title">👤 Perfil del cliente</h1>
-            <p className="page-badge">MS4 · GET /ms4/perfil-cliente/{id}</p>
+            <p className="page-badge">MS4 · GET /perfil-cliente/{id}</p>
           </div>
           <Link to="/pedidos" className="btn btn--outline-dark">
             ← Volver a Pedidos

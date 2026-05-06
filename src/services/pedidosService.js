@@ -11,8 +11,8 @@ import { apiRequest } from './apiClient'
 const MS2_PREFIX = '/ms2'
 
 export const pedidosService = {
-  /** Health check — GET /ms2/clientes (más liviano que /pedidos). */
-  healthCheck:          ()            => apiRequest(`${MS2_PREFIX}/clientes`),
+  /** Health check — GET /ms2/clientes/1 (registro individual, más ligero que la colección). */
+  healthCheck:          ()            => apiRequest(`${MS2_PREFIX}/clientes/1`),
 
   /** [Rúbrica MS2 · GET] Lista todos los pedidos. */
   getPedidos:           ()            => apiRequest(`${MS2_PREFIX}/pedidos`),

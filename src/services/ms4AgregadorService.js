@@ -1,29 +1,26 @@
 /**
  * MS4 — Agregador
- * Orquesta y consolida datos de múltiples microservicios.
- *
- * Prefijo de ruta: /ms4
- * Endpoints: /health, /perfil-cliente/{id}, /detalle-libro/{id},
- *            /resumen-pedido/{id}, /catalogo-con-stats
+ * API Gateway: SIN prefijo /ms4.
+ * Rutas reales confirmadas:
+ *   GET /perfil-cliente/1 ✔  GET /detalle-libro/1 ✔
+ *   GET /ms4/perfil-cliente/1 ✖ (404)
  * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms4/docs
  */
 
 import apiClient, { apiRequest } from './apiClient'
 
-const P = '/ms4'
+/** Health check — GET /detalle-libro/1 */
+export const healthCheck = () => apiClient.get(`/detalle-libro/1`)
 
-/** Health check — GET /ms4/health */
-export const healthCheck = () => apiClient.get(`${P}/health`)
-
-/** [Rúbrica MS4 · GET] Catálogo enriquecido con estadísticas (timeout extendido a 45 s por volumen de datos). */
+/** [Rúbrica MS4 · GET] Catálogo enriquecido con estadísticas (timeout extendido a 45 s). */
 export const getCatalogoConStats = () =>
-  apiRequest(`${P}/catalogo-con-stats`, { timeoutMs: 45_000 })
+  apiRequest(`/catalogo-con-stats`, { timeoutMs: 45_000 })
 
 /** [Rúbrica MS4 · GET] Detalle completo de un libro (datos + autor + reseñas + stats). */
-export const getDetalleLibro = (id) => apiClient.get(`${P}/detalle-libro/${id}`)
+export const getDetalleLibro = (id) => apiClient.get(`/detalle-libro/${id}`)
 
 /** Perfil completo de un cliente (datos + pedidos + reseñas). */
-export const getPerfilCliente = (id) => apiClient.get(`${P}/perfil-cliente/${id}`)
+export const getPerfilCliente = (id) => apiClient.get(`/perfil-cliente/${id}`)
 
 /** Resumen completo de un pedido con datos del cliente y libros. */
-export const getResumenPedido = (id) => apiClient.get(`${P}/resumen-pedido/${id}`)
+export const getResumenPedido = (id) => apiClient.get(`/resumen-pedido/${id}`)
