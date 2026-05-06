@@ -41,6 +41,7 @@ export default function LibrosPage() {
   const [showForm,    setShowForm]    = useState(false)
   const [form,        setForm]        = useState(EMPTY_FORM)
   const [formError,   setFormError]   = useState(null)
+  const [isbnError,   setIsbnError]   = useState(null)
   const [submitting,  setSubmitting]  = useState(false)
   const [filter,      setFilter]      = useState('')
   const [successMsg,  setSuccessMsg]  = useState(null)
@@ -93,6 +94,16 @@ export default function LibrosPage() {
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+    if (name === 'isbn') {
+      const digits = value.replace(/\D/g, '')
+      if (value.trim() === '') {
+        setIsbnError(null)
+      } else if (digits.length < 9) {
+        setIsbnError(`El ISBN debe contener al menos 9 dígitos numéricos (tiene ${digits.length}).`)
+      } else {
+        setIsbnError(null)
+      }
+    }
   }
 
   async function handleSubmit(e) {
@@ -103,6 +114,8 @@ export default function LibrosPage() {
     if (!form.autor_id)                          return setFormError('El autor es requerido.')
     if (!form.editorial_id)                      return setFormError('La editorial es requerida.')
     if (!form.genero_id)                         return setFormError('El género es requerido.')
+    if (form.isbn.trim() && form.isbn.replace(/\D/g, '').length < 9)
+      return setFormError('El ISBN debe contener al menos 9 dígitos numéricos.')
 
     setSubmitting(true)
     try {
@@ -126,6 +139,7 @@ export default function LibrosPage() {
       const createdBook = response?.libro ?? response?.item ?? response?.data ?? response
 
       setForm(EMPTY_FORM)
+      setIsbnError(null)
       setShowForm(false)
       setSuccessMsg(`Libro "${payload.titulo}" creado correctamente.`)
 
@@ -245,7 +259,16 @@ export default function LibrosPage() {
               </label>
               <label className="form-field">
                 <span>ISBN</span>
-                <input name="isbn" value={form.isbn} onChange={handleChange} placeholder="978-..." />
+                <input
+                  name="isbn" value={form.isbn} onChange={handleChange}
+                  placeholder="978-..."
+                  style={isbnError ? { borderColor: 'var(--color-error, #dc2626)' } : undefined}
+                />
+                {isbnError && (
+                  <span style={{ color: 'var(--color-error, #dc2626)', fontSize: '0.78rem', marginTop: '0.2rem' }}>
+                    {isbnError}
+                  </span>
+                )}
               </label>
               <label className="form-field">
                 <span>Stock</span>
@@ -268,7 +291,7 @@ export default function LibrosPage() {
               <button type="submit" className="btn btn--accent" disabled={submitting}>
                 {submitting ? 'Guardando…' : 'Guardar libro'}
               </button>
-              <button type="button" className="btn btn--ghost" onClick={() => setShowForm(false)}>
+              <button type="button" className="btn btn--ghost" onClick={() => { setShowForm(false); setIsbnError(null) }}>
                 Cancelar
               </button>
             </div>
