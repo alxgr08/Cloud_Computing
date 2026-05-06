@@ -38,17 +38,11 @@ const CHECKS = [
 // ── B. Diagnóstico MS4 ─────────────────────────────────────────────────────
 const MS4_DIAG = [
   { key: 'ms4_d1',  label: 'GET /perfil-cliente/1',         path: '/perfil-cliente/1' },
-  { key: 'ms4_d2',  label: 'GET /perfil-cliente/1/',        path: '/perfil-cliente/1/' },
   { key: 'ms4_d3',  label: 'GET /ms4/perfil-cliente/1',     path: '/ms4/perfil-cliente/1' },
-  { key: 'ms4_d4',  label: 'GET /ms4/perfil-cliente/1/',    path: '/ms4/perfil-cliente/1/' },
   { key: 'ms4_d5',  label: 'GET /detalle-libro/1',          path: '/detalle-libro/1' },
-  { key: 'ms4_d6',  label: 'GET /detalle-libro/1/',         path: '/detalle-libro/1/' },
   { key: 'ms4_d7',  label: 'GET /ms4/detalle-libro/1',      path: '/ms4/detalle-libro/1' },
-  { key: 'ms4_d8',  label: 'GET /ms4/detalle-libro/1/',     path: '/ms4/detalle-libro/1/' },
   { key: 'ms4_d9',  label: 'GET /catalogo-con-stats',       path: '/catalogo-con-stats',       timeoutMs: 45_000 },
-  { key: 'ms4_d10', label: 'GET /catalogo-con-stats/',      path: '/catalogo-con-stats/',      timeoutMs: 45_000 },
   { key: 'ms4_d11', label: 'GET /ms4/catalogo-con-stats',   path: '/ms4/catalogo-con-stats',   timeoutMs: 45_000 },
-  { key: 'ms4_d12', label: 'GET /ms4/catalogo-con-stats/',  path: '/ms4/catalogo-con-stats/',  timeoutMs: 45_000 },
 ]
 
 const BADGE_COLORS = {

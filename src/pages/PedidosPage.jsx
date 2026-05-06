@@ -159,15 +159,17 @@ export default function PedidosPage() {
   return (
     <div className="page-container">
       <div className="container">
+
+        {/* ── Encabezado ── */}
         <div className="page-header">
           <div>
             <h1 className="page-title">🛒 Pedidos</h1>
             <p className="page-badge">MS2 · GET /ms2/pedidos/{"{id}"} · POST /ms2/pedidos</p>
-            <p className="page-sub">
+            <p style={{ marginTop: '0.35rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
               Estado MS2:&nbsp;
-              {ms2Status === 'checking' && <span className="status-dot">verificando…</span>}
-              {ms2Status === 'ok'       && <span className="status-dot status-dot--ok">● conectado</span>}
-              {ms2Status === 'error'    && <span className="status-dot status-dot--error">● sin conexión</span>}
+              {ms2Status === 'checking' && <span className="service-badge__status service-badge__status--checking">verificando…</span>}
+              {ms2Status === 'ok'       && <span className="service-badge__status service-badge__status--ok">● conectado</span>}
+              {ms2Status === 'error'    && <span className="service-badge__status service-badge__status--error">● sin conexión</span>}
             </p>
           </div>
           <button className="btn btn--accent" onClick={() => { setShowForm(!showForm); setFormError(null) }}>
@@ -175,6 +177,7 @@ export default function PedidosPage() {
           </button>
         </div>
 
+        {/* ── Banner de éxito ── */}
         {createSuccess && (
           <div className="alert alert--success">
             ✅ Pedido creado con ID: <strong>{createSuccess.id ?? '—'}</strong>&nbsp;·&nbsp;
@@ -184,6 +187,7 @@ export default function PedidosPage() {
           </div>
         )}
 
+        {/* ── Formulario de creación ── */}
         {showForm && (
           <form className="form-card" onSubmit={handleSubmit} noValidate>
             <h2 className="form-card__title">Nuevo pedido</h2>
@@ -217,64 +221,110 @@ export default function PedidosPage() {
           </form>
         )}
 
-        <section className="search-section">
-          <h2 className="section-title">🔍 Buscar pedido por ID</h2>
-          <form className="search-inline" onSubmit={handleBuscarPedido}>
-            <input type="number" min="1" value={pedidoIdInput} onChange={(e) => setPedidoIdInput(e.target.value)} placeholder="ID del pedido" className="input-inline" />
-            <button type="submit" className="btn btn--primary" disabled={loadingPedidoId}>{loadingPedidoId ? 'Buscando…' : 'Buscar pedido'}</button>
+        {/* ── Buscar pedido por ID ── */}
+        <section className="detail-section" style={{ marginBottom: '1.5rem' }}>
+          <h2 className="detail-section__title">🔍 Buscar pedido por ID</h2>
+          <form className="search-row" onSubmit={handleBuscarPedido}>
+            <input
+              type="number" min="1" value={pedidoIdInput}
+              onChange={(e) => setPedidoIdInput(e.target.value)}
+              placeholder="ID del pedido"
+              className="search-input"
+              style={{ maxWidth: '180px' }}
+            />
+            <button type="submit" className="btn btn--accent" disabled={loadingPedidoId}>
+              {loadingPedidoId ? 'Buscando…' : 'Buscar pedido'}
+            </button>
           </form>
           {loadingPedidoId && <LoadingState message="Cargando pedido…" />}
           {!loadingPedidoId && errorPedidoId && <ErrorState message={errorPedidoId} onRetry={handleBuscarPedido} />}
           {!loadingPedidoId && pedidoResult && (
-            <div className="table-wrapper"><table className="data-table">{THEAD}<tbody><PedidoRow p={pedidoResult} /></tbody></table></div>
+            <div className="table-wrapper" style={{ marginTop: '1rem' }}>
+              <table className="data-table">{THEAD}<tbody><PedidoRow p={pedidoResult} /></tbody></table>
+            </div>
           )}
         </section>
 
-        <section className="search-section">
-          <h2 className="section-title">🪪 Buscar cliente por ID</h2>
-          <form className="search-inline" onSubmit={handleBuscarClienteById}>
-            <input type="number" min="1" value={clienteIdBInput} onChange={(e) => setClienteIdBInput(e.target.value)} placeholder="ID del cliente" className="input-inline" />
-            <button type="submit" className="btn btn--primary" disabled={loadingClienteB}>{loadingClienteB ? 'Buscando…' : 'Buscar cliente'}</button>
+        {/* ── Buscar cliente por ID ── */}
+        <section className="detail-section" style={{ marginBottom: '1.5rem' }}>
+          <h2 className="detail-section__title">🪪 Buscar cliente por ID</h2>
+          <form className="search-row" onSubmit={handleBuscarClienteById}>
+            <input
+              type="number" min="1" value={clienteIdBInput}
+              onChange={(e) => setClienteIdBInput(e.target.value)}
+              placeholder="ID del cliente"
+              className="search-input"
+              style={{ maxWidth: '180px' }}
+            />
+            <button type="submit" className="btn btn--accent" disabled={loadingClienteB}>
+              {loadingClienteB ? 'Buscando…' : 'Buscar cliente'}
+            </button>
           </form>
           {loadingClienteB && <LoadingState message="Cargando cliente…" />}
           {!loadingClienteB && errorClienteB && <ErrorState message={errorClienteB} />}
           {!loadingClienteB && clienteResult && (
-            <pre className="apitest-card__pre" style={{ marginTop: '0.75rem' }}>
-              {JSON.stringify(clienteResult, null, 2).slice(0, 1000)}
-            </pre>
+            <div className="detail-extra" style={{ marginTop: '1rem' }}>
+              {Object.entries(clienteResult).map(([k, v]) => (
+                <div key={k} className="detail-extra__row">
+                  <span className="detail-extra__key">{k}</span>
+                  <span className="detail-extra__val">{String(v ?? '—')}</span>
+                </div>
+              ))}
+            </div>
           )}
         </section>
 
-        <section className="search-section">
-          <h2 className="section-title">👤 Pedidos de un cliente</h2>
-          <form className="search-inline" onSubmit={handleBuscarPorCliente}>
-            <input type="number" min="1" value={clienteIdInput} onChange={(e) => setClienteIdInput(e.target.value)} placeholder="ID del cliente" className="input-inline" />
-            <button type="submit" className="btn btn--primary" disabled={loadingCliente}>{loadingCliente ? 'Cargando…' : 'Ver pedidos del cliente'}</button>
+        {/* ── Pedidos de un cliente ── */}
+        <section className="detail-section" style={{ marginBottom: '1.5rem' }}>
+          <h2 className="detail-section__title">👤 Pedidos de un cliente</h2>
+          <form className="search-row" onSubmit={handleBuscarPorCliente}>
+            <input
+              type="number" min="1" value={clienteIdInput}
+              onChange={(e) => setClienteIdInput(e.target.value)}
+              placeholder="ID del cliente"
+              className="search-input"
+              style={{ maxWidth: '180px' }}
+            />
+            <button type="submit" className="btn btn--accent" disabled={loadingCliente}>
+              {loadingCliente ? 'Cargando…' : 'Ver pedidos del cliente'}
+            </button>
           </form>
           {loadingCliente && <LoadingState message="Cargando pedidos del cliente…" />}
           {!loadingCliente && errorCliente && <ErrorState message={errorCliente} onRetry={handleBuscarPorCliente} />}
-          {!loadingCliente && pedidosCliente !== null && pedidosCliente.length === 0 && <EmptyState message="Este cliente no tiene pedidos." icon="📭" />}
+          {!loadingCliente && pedidosCliente !== null && pedidosCliente.length === 0 && (
+            <EmptyState message="Este cliente no tiene pedidos." icon="📭" />
+          )}
           {!loadingCliente && pedidosCliente && pedidosCliente.length > 0 && (
-            <div className="table-wrapper"><table className="data-table">{THEAD}<tbody>{pedidosCliente.map((p) => <PedidoRow key={p.id} p={p} />)}</tbody></table></div>
+            <div className="table-wrapper" style={{ marginTop: '1rem' }}>
+              <table className="data-table">{THEAD}<tbody>{pedidosCliente.map((p) => <PedidoRow key={p.id} p={p} />)}</tbody></table>
+            </div>
           )}
         </section>
 
-        <section className="search-section">
-          <h2 className="section-title">📋 Todos los pedidos</h2>
-          <p className="search-section__warning">⚠️ Este endpoint carga toda la tabla y puede tardar hasta 60 s.</p>
+        {/* ── Todos los pedidos ── */}
+        <section className="detail-section">
+          <h2 className="detail-section__title">📋 Todos los pedidos</h2>
+          <div className="alert alert--warning">
+            ⚠️ Este endpoint carga toda la tabla y puede tardar hasta 60 s.
+          </div>
           {!loadingAll && allPedidos === null && (
             <button className="btn btn--ghost" onClick={handleCargarTodos}>Cargar todos (puede tardar)</button>
           )}
           {loadingAll && <LoadingState message="Cargando todos los pedidos… (hasta 60 s)" />}
           {!loadingAll && errorAll && <ErrorState message={errorAll} onRetry={handleCargarTodos} />}
-          {!loadingAll && allPedidos !== null && allPedidos.length === 0 && <EmptyState message="No hay pedidos registrados." icon="🛒" />}
+          {!loadingAll && allPedidos !== null && allPedidos.length === 0 && (
+            <EmptyState message="No hay pedidos registrados." icon="🛒" />
+          )}
           {!loadingAll && allPedidos && allPedidos.length > 0 && (
             <>
               <p className="table-count">{allPedidos.length} pedidos</p>
-              <div className="table-wrapper"><table className="data-table">{THEAD}<tbody>{allPedidos.map((p) => <PedidoRow key={p.id} p={p} />)}</tbody></table></div>
+              <div className="table-wrapper">
+                <table className="data-table">{THEAD}<tbody>{allPedidos.map((p) => <PedidoRow key={p.id} p={p} />)}</tbody></table>
+              </div>
             </>
           )}
         </section>
+
       </div>
     </div>
   )
