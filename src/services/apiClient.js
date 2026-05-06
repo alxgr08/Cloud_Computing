@@ -10,35 +10,66 @@ const BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   'https://47c36x353h.execute-api.us-east-1.amazonaws.com'
 
-const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-}
+/** Tiempo máximo de espera por petición antes de abortar (15 s). */
+const TIMEOUT_MS = 15_000
+
+const isDev = import.meta.env.DEV
 
 /**
  * Ejecuta una petición HTTP contra el API Gateway.
  * Lanza un error descriptivo (nunca el objeto crudo) ante cualquier fallo.
  *
- * @param {string} path  - Ruta relativa, ej. "/ms1/libros"
+ * @param {string} path  - Ruta relativa, ej. "/ms1/libros/"
  * @param {RequestInit} options - Opciones fetch adicionales
  */
 async function request(path, options = {}) {
   const url = `${BASE_URL}${path}`
+  const method = (options.method || 'GET').toUpperCase()
+
+  // Solo se envía Content-Type cuando hay body para evitar preflight CORS innecesario en GET/DELETE.
+  const headers = {
+    Accept: 'application/json',
+    ...(options.headers || {}),
+  }
+  if (options.body) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+  if (isDev) {
+    console.log(`[apiClient] → ${method} ${url}`)
+  }
 
   let response
   try {
     response = await fetch(url, {
       ...options,
-      headers: { ...DEFAULT_HEADERS, ...(options.headers || {}) },
+      headers,
+      signal: controller.signal,
     })
   } catch (networkError) {
+    clearTimeout(timeoutId)
+    if (networkError.name === 'AbortError') {
+      const err = new Error(`Timeout: el servicio no respondió en ${TIMEOUT_MS / 1000} s.`)
+      err.type = 'TIMEOUT'
+      if (isDev) console.warn(`[apiClient] TIMEOUT → ${url}`)
+      throw err
+    }
     // Error de red o CORS
     const err = new Error(
       'No se pudo conectar con el servidor. Verifica tu conexión o que el servicio esté disponible.'
     )
     err.type = 'NETWORK'
-    console.error(`[apiClient] Network error → ${url}`, networkError)
+    if (isDev) console.error(`[apiClient] NETWORK ERROR → ${url}`, networkError)
     throw err
+  }
+
+  clearTimeout(timeoutId)
+
+  if (isDev) {
+    console.log(`[apiClient] ← ${method} ${response.status} ${url}`)
   }
 
   if (!response.ok) {
@@ -58,12 +89,15 @@ async function request(path, options = {}) {
     err.status = response.status
     err.body = body
     err.type = 'HTTP'
-    console.error(`[apiClient] HTTP ${response.status} → ${url}`, body)
+    if (isDev) console.error(`[apiClient] HTTP ${response.status} → ${url}`, body)
     throw err
   }
 
   // Respuesta vacía (204 No Content, etc.)
   const text = await response.text()
+  if (isDev && text) {
+    console.log(`[apiClient] BODY ← ${url}:`, text.slice(0, 300) + (text.length > 300 ? '…' : ''))
+  }
   if (!text || !text.trim()) return null
 
   try {

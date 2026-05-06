@@ -7,6 +7,9 @@ import { apiRequest } from './apiClient'
 const MS4_PREFIX = '/ms4'
 
 export const agregadorService = {
+  /** Health check — GET /ms4/health */
+  healthCheck:         ()  => apiRequest(`${MS4_PREFIX}/health`),
+
   /** Perfil completo de un cliente (datos + pedidos + reseñas). */
   getPerfilCliente:   (id) => apiRequest(`${MS4_PREFIX}/perfil-cliente/${id}`),
 

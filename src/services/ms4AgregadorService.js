@@ -3,14 +3,17 @@
  * Orquesta y consolida datos de múltiples microservicios.
  *
  * Prefijo de ruta: /ms4
- * Endpoints: /perfil-cliente/{id}, /detalle-libro/{id},
+ * Endpoints: /health, /perfil-cliente/{id}, /detalle-libro/{id},
  *            /resumen-pedido/{id}, /catalogo-con-stats
- * Swagger:   https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms4/docs
+ * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms4/docs
  */
 
 import apiClient from './apiClient'
 
 const P = '/ms4'
+
+/** Health check — GET /ms4/health */
+export const healthCheck = () => apiClient.get(`${P}/health`)
 
 /** [Rúbrica MS4 · GET] Catálogo enriquecido con estadísticas. */
 export const getCatalogoConStats = () => apiClient.get(`${P}/catalogo-con-stats`)

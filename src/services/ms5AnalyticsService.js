@@ -3,14 +3,17 @@
  * Proporciona métricas y estadísticas de la plataforma.
  *
  * Prefijo de ruta: /ms5
- * Endpoints: /ventas-por-genero, /top-autores, /top-clientes,
+ * Endpoints: /health, /ventas-por-genero, /top-autores, /top-clientes,
  *            /rating-por-genero, /libros-mas-vendidos
- * Swagger:   https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms5/docs
+ * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms5/docs
  */
 
 import apiClient from './apiClient'
 
 const P = '/ms5'
+
+/** Health check — GET /ms5/health */
+export const healthCheck = () => apiClient.get(`${P}/health`)
 
 /** [Rúbrica MS5 · GET] Ventas agrupadas por género literario. */
 export const getVentasPorGenero = () => apiClient.get(`${P}/ventas-por-genero`)

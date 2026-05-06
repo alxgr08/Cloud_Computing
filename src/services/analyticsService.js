@@ -7,6 +7,9 @@ import { apiRequest } from './apiClient'
 const MS5_PREFIX = '/ms5'
 
 export const analyticsService = {
+  /** Health check — GET /ms5/health */
+  healthCheck:         () => apiRequest(`${MS5_PREFIX}/health`),
+
   /** [Rúbrica MS5 · GET] Ventas agrupadas por género literario. */
   getVentasPorGenero:  () => apiRequest(`${MS5_PREFIX}/ventas-por-genero`),
 

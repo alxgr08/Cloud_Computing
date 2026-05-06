@@ -7,12 +7,15 @@ import { Link, useNavigate } from 'react-router-dom'
 import Hero from '../components/Hero'
 import apiClient from '../services/apiClient'
 
+// Health check paths verificados en vivo contra el API Gateway.
+// MS2: no tiene /health → usa /clientes.
+// MS3: montado en raíz, NO en /ms3 → usa /resenas (no /ms3/resenas).
 const SERVICES = [
-  { id: 'ms1', name: 'MS1 — Catálogo',  path: '/ms1/libros',             icon: '📚' },
-  { id: 'ms2', name: 'MS2 — Pedidos',   path: '/ms2/pedidos',            icon: '🛒' },
-  { id: 'ms3', name: 'MS3 — Reseñas',   path: '/ms3/resenas',            icon: '⭐' },
-  { id: 'ms4', name: 'MS4 — Agregador', path: '/ms4/catalogo-con-stats', icon: '🔗' },
-  { id: 'ms5', name: 'MS5 — Analytics', path: '/ms5/ventas-por-genero',  icon: '📊' },
+  { id: 'ms1', name: 'MS1 — Catálogo',  path: '/ms1/health',  icon: '📚' },
+  { id: 'ms2', name: 'MS2 — Pedidos',   path: '/ms2/clientes', icon: '🛒' },
+  { id: 'ms3', name: 'MS3 — Reseñas',   path: '/resenas',     icon: '⭐' },
+  { id: 'ms4', name: 'MS4 — Agregador', path: '/ms4/health',  icon: '🔗' },
+  { id: 'ms5', name: 'MS5 — Analytics', path: '/ms5/health',  icon: '📊' },
 ]
 
 const MODULES = [
@@ -24,23 +27,39 @@ const MODULES = [
 ]
 
 function ServiceBadge({ service }) {
-  const [status, setStatus] = useState('checking') // checking | ok | error
+  // checking | ok | error (red/network) | console_error (HTTP 4xx/5xx)
+  const [status, setStatus] = useState('checking')
 
   useEffect(() => {
     let cancelled = false
     apiClient.get(service.path)
-      .then(() => { if (!cancelled) setStatus('ok') })
-      .catch(() => { if (!cancelled) setStatus('error') })
+      .then(() => {
+        if (!cancelled) setStatus('ok')
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          // HTTP errors (4xx/5xx) get their own label; network/timeout → 'Sin conexión'
+          setStatus(err?.type === 'HTTP' ? 'console_error' : 'error')
+        }
+      })
     return () => { cancelled = true }
   }, [service.path])
+
+  // Map 'console_error' to the 'error' CSS class to keep existing styles
+  const cssState = status === 'console_error' ? 'error' : status
+  const label =
+    status === 'checking'      ? 'Verificando…'
+    : status === 'ok'          ? '● Online'
+    : status === 'console_error' ? '● Error: revisar consola'
+    : '● Sin conexión'
 
   return (
     <div className="service-badge">
       <span className="service-badge__icon">{service.icon}</span>
       <div className="service-badge__info">
         <span className="service-badge__name">{service.name}</span>
-        <span className={`service-badge__status service-badge__status--${status}`}>
-          {status === 'checking' ? 'Verificando…' : status === 'ok' ? '● Online' : '● Sin conexión'}
+        <span className={`service-badge__status service-badge__status--${cssState}`}>
+          {label}
         </span>
       </div>
     </div>
