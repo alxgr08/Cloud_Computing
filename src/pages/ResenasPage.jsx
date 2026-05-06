@@ -298,21 +298,3 @@ export default function ResenasPage() {
   )
 }
 
-const EMPTY_FORM = {
-  libro_id: '', cliente_id: '', titulo: '', rating: '5', comentario: '',
-}
-
-const STARS = [1, 2, 3, 4, 5]
-
-function normResena(r) {
-  return {
-    id:           r.id,
-    libro:        r.libro        || r.libro_titulo   || r.book  || r.libro_id  || '—',
-    cliente:      r.cliente      || r.cliente_nombre || r.user  || r.cliente_id || '—',
-    calificacion: r.rating       ?? r.calificacion   ?? r.score ?? null,
-    titulo:       r.titulo       || '',
-    comentario:   r.comentario   || r.comment        || r.texto || '',
-    fecha:        r.fecha        || r.created_at     || r.date  || null,
-  }
-}
-
