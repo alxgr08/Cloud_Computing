@@ -1,6 +1,10 @@
 /**
  * PedidosPage — Gestión de pedidos y clientes
  * Consume MS2: GET /ms2/pedidos, POST /ms2/pedidos, GET /ms2/clientes
+ *
+ * MS2 OpenAPI payload para crear pedido:
+ *   { clienteId, fecha, estado, total, direccionEnvio, metodoPago,
+ *     items: [{ libroId, cantidad, precioUnitario }] }
  */
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
@@ -9,16 +13,17 @@ import ErrorState   from '../components/common/ErrorState'
 import EmptyState   from '../components/common/EmptyState'
 import { getPedidos, createPedido, getClientes } from '../services/ms2PedidosService'
 
-const EMPTY_FORM = {
-  cliente_id: '', libro_id: '', cantidad: '1', total: '',
-}
+const METODOS_PAGO = ['tarjeta', 'efectivo', 'transferencia', 'paypal']
 
-const ESTADOS = ['pendiente', 'procesando', 'enviado', 'entregado', 'cancelado']
+const EMPTY_FORM = {
+  clienteId: '', libroId: '', cantidad: '1', precioUnitario: '',
+  direccionEnvio: '', metodoPago: 'tarjeta',
+}
 
 function normPedido(p) {
   return {
     id:         p.id,
-    cliente:    p.cliente    || p.client       || p.cliente_nombre || p.cliente_id || '—',
+    cliente:    p.cliente    || p.client       || p.cliente_nombre || p.clienteId || p.cliente_id || '—',
     estado:     p.estado     || p.status       || p.state         || '—',
     total:      p.total      ?? p.monto        ?? p.amount        ?? null,
     fecha:      p.fecha      || p.fecha_pedido || p.created_at    || p.date || null,
@@ -27,34 +32,49 @@ function normPedido(p) {
 }
 
 export default function PedidosPage() {
-  const [pedidos,    setPedidos]    = useState([])
-  const [clientes,   setClientes]   = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState(null)
-  const [showForm,   setShowForm]   = useState(false)
-  const [form,       setForm]       = useState(EMPTY_FORM)
-  const [formError,  setFormError]  = useState(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [pedidos,        setPedidos]        = useState([])
+  const [clientes,       setClientes]       = useState([])
+  // Los pedidos y los clientes se cargan de forma independiente para que
+  // un timeout en /pedidos no bloquee la sección de clientes ni el formulario.
+  const [loadingPedidos, setLoadingPedidos] = useState(true)
+  const [loadingClientes, setLoadingClientes] = useState(true)
+  const [errorPedidos,   setErrorPedidos]   = useState(null)
+  const [errorClientes,  setErrorClientes]  = useState(null)
+  const [showForm,       setShowForm]       = useState(false)
+  const [form,           setForm]           = useState(EMPTY_FORM)
+  const [formError,      setFormError]      = useState(null)
+  const [submitting,     setSubmitting]     = useState(false)
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const fetchClientes = useCallback(async () => {
+    setLoadingClientes(true)
+    setErrorClientes(null)
     try {
-      const [pedidosRes, clientesRes] = await Promise.allSettled([
-        getPedidos(), getClientes()
-      ])
-      if (pedidosRes.status === 'rejected') throw pedidosRes.reason
-      setPedidos(Array.isArray(pedidosRes.value) ? pedidosRes.value : [])
-      if (clientesRes.status === 'fulfilled')
-        setClientes(Array.isArray(clientesRes.value) ? clientesRes.value : [])
+      const data = await getClientes()
+      setClientes(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(err.message)
+      setErrorClientes(err.message)
     } finally {
-      setLoading(false)
+      setLoadingClientes(false)
     }
   }, [])
 
-  useEffect(() => { fetchAll() }, [fetchAll])
+  const fetchPedidos = useCallback(async () => {
+    setLoadingPedidos(true)
+    setErrorPedidos(null)
+    try {
+      const data = await getPedidos()
+      setPedidos(Array.isArray(data) ? data : [])
+    } catch (err) {
+      setErrorPedidos(err.message)
+    } finally {
+      setLoadingPedidos(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchClientes()
+    fetchPedidos()
+  }, [fetchClientes, fetchPedidos])
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -64,21 +84,32 @@ export default function PedidosPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setFormError(null)
-    if (!form.cliente_id)                          return setFormError('El cliente es requerido.')
-    if (!form.cantidad || Number(form.cantidad) < 1) return setFormError('La cantidad debe ser al menos 1.')
+    if (!form.clienteId)                                   return setFormError('El cliente es requerido.')
+    if (!form.cantidad || Number(form.cantidad) < 1)        return setFormError('La cantidad debe ser al menos 1.')
+    if (!form.precioUnitario || Number(form.precioUnitario) <= 0) return setFormError('El precio unitario debe ser mayor a 0.')
+    if (!form.direccionEnvio.trim())                       return setFormError('La dirección de envío es requerida.')
+
+    const cantidad        = Number(form.cantidad)
+    const precioUnitario  = Number(form.precioUnitario)
+
+    const payload = {
+      clienteId:      Number(form.clienteId),
+      fecha:          new Date().toISOString().slice(0, 10),
+      estado:         'pendiente',
+      total:          Math.round(cantidad * precioUnitario * 100) / 100,
+      direccionEnvio: form.direccionEnvio.trim(),
+      metodoPago:     form.metodoPago,
+      items: form.libroId
+        ? [{ libroId: Number(form.libroId), cantidad, precioUnitario }]
+        : [],
+    }
 
     setSubmitting(true)
     try {
-      const payload = {
-        cliente_id: Number(form.cliente_id),
-        cantidad:   Number(form.cantidad),
-        total:      form.total ? Number(form.total) : undefined,
-        libro_id:   form.libro_id ? Number(form.libro_id) : undefined,
-      }
       await createPedido(payload)
       setForm(EMPTY_FORM)
       setShowForm(false)
-      await fetchAll()
+      fetchPedidos()
     } catch (err) {
       setFormError(err.message)
     } finally {
@@ -111,7 +142,7 @@ export default function PedidosPage() {
               <label className="form-field">
                 <span>Cliente *</span>
                 {clientes.length > 0 ? (
-                  <select name="cliente_id" value={form.cliente_id} onChange={handleChange} required>
+                  <select name="clienteId" value={form.clienteId} onChange={handleChange} required>
                     <option value="">— Seleccionar cliente —</option>
                     {clientes.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -121,34 +152,50 @@ export default function PedidosPage() {
                   </select>
                 ) : (
                   <input
-                    name="cliente_id" type="number" min="1"
-                    value={form.cliente_id} onChange={handleChange}
+                    name="clienteId" type="number" min="1"
+                    value={form.clienteId} onChange={handleChange}
                     placeholder="ID del cliente" required
                   />
                 )}
               </label>
               <label className="form-field">
-                <span>Cantidad</span>
+                <span>ID del libro (opcional)</span>
+                <input
+                  name="libroId" type="number" min="1"
+                  value={form.libroId} onChange={handleChange}
+                  placeholder="ID del libro"
+                />
+              </label>
+              <label className="form-field">
+                <span>Cantidad *</span>
                 <input
                   name="cantidad" type="number" min="1"
                   value={form.cantidad} onChange={handleChange}
-                  placeholder="1"
+                  placeholder="1" required
                 />
               </label>
               <label className="form-field">
-                <span>Total ($)</span>
+                <span>Precio unitario * ($)</span>
                 <input
-                  name="total" type="number" step="0.01" min="0"
-                  value={form.total} onChange={handleChange}
-                  placeholder="0.00"
+                  name="precioUnitario" type="number" step="0.01" min="0.01"
+                  value={form.precioUnitario} onChange={handleChange}
+                  placeholder="0.00" required
                 />
               </label>
               <label className="form-field">
-                <span>ID del libro</span>
+                <span>Método de pago *</span>
+                <select name="metodoPago" value={form.metodoPago} onChange={handleChange}>
+                  {METODOS_PAGO.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-field">
+                <span>Dirección de envío *</span>
                 <input
-                  name="libro_id" type="number" min="1"
-                  value={form.libro_id} onChange={handleChange}
-                  placeholder="ID del libro (opcional)"
+                  name="direccionEnvio" type="text"
+                  value={form.direccionEnvio} onChange={handleChange}
+                  placeholder="Calle, ciudad, país" required
                 />
               </label>
             </div>
@@ -164,7 +211,11 @@ export default function PedidosPage() {
         )}
 
         {/* ── Clientes section ── */}
-        {clientes.length > 0 && (
+        {loadingClientes && <LoadingState message="Cargando clientes…" />}
+        {!loadingClientes && errorClientes && (
+          <ErrorState message={`Clientes: ${errorClientes}`} onRetry={fetchClientes} />
+        )}
+        {!loadingClientes && !errorClientes && clientes.length > 0 && (
           <details className="collapsible">
             <summary className="collapsible__summary">
               👥 Clientes cargados desde /ms2/clientes ({clientes.length})
@@ -199,13 +250,18 @@ export default function PedidosPage() {
         )}
 
         {/* ── Tabla de pedidos ── */}
-        {loading && <LoadingState message="Cargando pedidos desde MS2…" />}
-        {!loading && error && <ErrorState message={error} onRetry={fetchAll} />}
-        {!loading && !error && displayed.length === 0 && (
+        {loadingPedidos && <LoadingState message="Cargando pedidos desde MS2… (puede tardar hasta 30 s)" />}
+        {!loadingPedidos && errorPedidos && (
+          <ErrorState
+            message={`Pedidos: ${errorPedidos}`}
+            onRetry={fetchPedidos}
+          />
+        )}
+        {!loadingPedidos && !errorPedidos && displayed.length === 0 && (
           <EmptyState message="No hay pedidos registrados." icon="🛒" />
         )}
 
-        {!loading && !error && displayed.length > 0 && (
+        {!loadingPedidos && !errorPedidos && displayed.length > 0 && (
           <>
             <p className="table-count">{displayed.length} pedidos</p>
             <div className="table-wrapper">

@@ -9,19 +9,20 @@ import EmptyState   from '../components/common/EmptyState'
 import { getResenas, createResena, deleteResena } from '../services/ms3ResenasService'
 
 const EMPTY_FORM = {
-  libro_id: '', cliente_id: '', calificacion: '5', comentario: '',
+  libro_id: '', cliente_id: '', titulo: '', rating: '5', comentario: '',
 }
 
 const STARS = [1, 2, 3, 4, 5]
 
 function normResena(r) {
   return {
-    id:            r.id,
-    libro:         r.libro      || r.libro_titulo || r.book  || r.libro_id  || '—',
-    cliente:       r.cliente    || r.cliente_nombre || r.user  || r.cliente_id || '—',
-    calificacion:  r.calificacion ?? r.rating   ?? r.score ?? null,
-    comentario:    r.comentario || r.comment    || r.texto || '',
-    fecha:         r.fecha      || r.created_at || r.date  || null,
+    id:           r.id,
+    libro:        r.libro        || r.libro_titulo   || r.book  || r.libro_id  || '—',
+    cliente:      r.cliente      || r.cliente_nombre || r.user  || r.cliente_id || '—',
+    calificacion: r.rating       ?? r.calificacion   ?? r.score ?? null,
+    titulo:       r.titulo       || '',
+    comentario:   r.comentario   || r.comment        || r.texto || '',
+    fecha:        r.fecha        || r.created_at     || r.date  || null,
   }
 }
 
@@ -58,18 +59,21 @@ export default function ResenasPage() {
     e.preventDefault()
     setFormError(null)
 
-    const cal = Number(form.calificacion)
-    if (!form.libro_id)              return setFormError('El ID del libro es requerido.')
-    if (isNaN(cal) || cal < 1 || cal > 5) return setFormError('La calificación debe estar entre 1 y 5.')
-    if (!form.comentario.trim())     return setFormError('El comentario es requerido.')
+    const rat = Number(form.rating)
+    if (!form.libro_id)                          return setFormError('El ID del libro es requerido.')
+    if (!form.cliente_id)                        return setFormError('El ID del cliente es requerido.')
+    if (!form.titulo.trim())                     return setFormError('El título de la reseña es requerido.')
+    if (isNaN(rat) || rat < 1 || rat > 5)        return setFormError('La calificación debe estar entre 1 y 5.')
+    if (!form.comentario.trim())                 return setFormError('El comentario es requerido.')
 
     setSubmitting(true)
     try {
       const payload = {
-        libro_id:     Number(form.libro_id),
-        cliente_id:   form.cliente_id ? Number(form.cliente_id) : undefined,
-        calificacion: cal,
-        comentario:   form.comentario.trim(),
+        libro_id:   Number(form.libro_id),
+        cliente_id: Number(form.cliente_id),
+        titulo:     form.titulo.trim(),
+        rating:     rat,
+        comentario: form.comentario.trim(),
       }
       await createResena(payload)
       setForm(EMPTY_FORM)
@@ -123,16 +127,24 @@ export default function ResenasPage() {
                 />
               </label>
               <label className="form-field">
-                <span>ID del cliente</span>
+                <span>ID del cliente *</span>
                 <input
                   name="cliente_id" type="number" min="1"
                   value={form.cliente_id} onChange={handleChange}
-                  placeholder="ID del cliente (opcional)"
+                  placeholder="ID del cliente" required
+                />
+              </label>
+              <label className="form-field form-field--full">
+                <span>Título de la reseña *</span>
+                <input
+                  name="titulo" type="text"
+                  value={form.titulo} onChange={handleChange}
+                  placeholder="Escribe un título breve para tu reseña" required
                 />
               </label>
               <label className="form-field">
                 <span>Calificación * (1 – 5)</span>
-                <select name="calificacion" value={form.calificacion} onChange={handleChange}>
+                <select name="rating" value={form.rating} onChange={handleChange}>
                   {STARS.map((s) => (
                     <option key={s} value={s}>{'⭐'.repeat(s)} ({s})</option>
                   ))}

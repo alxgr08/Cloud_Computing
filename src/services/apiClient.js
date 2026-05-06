@@ -6,12 +6,14 @@
  *   VITE_API_BASE_URL=https://47c36x353h.execute-api.us-east-1.amazonaws.com
  */
 
-const BASE_URL =
+// Elimina la barra final de BASE_URL para no producir doble slash.
+const BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
   'https://47c36x353h.execute-api.us-east-1.amazonaws.com'
+).replace(/\/$/, '')
 
-/** Tiempo máximo de espera por petición antes de abortar (15 s). */
-const TIMEOUT_MS = 15_000
+/** Timeout por defecto (30 s). Se puede sobreescribir por petición con la opción timeoutMs. */
+const DEFAULT_TIMEOUT_MS = 30_000
 
 const isDev = import.meta.env.DEV
 
@@ -20,49 +22,70 @@ const isDev = import.meta.env.DEV
  * Lanza un error descriptivo (nunca el objeto crudo) ante cualquier fallo.
  *
  * @param {string} path  - Ruta relativa, ej. "/ms1/libros/"
- * @param {RequestInit} options - Opciones fetch adicionales
+ * @param {object} options - Opciones fetch + opción extra `timeoutMs`
  */
 async function request(path, options = {}) {
-  const url = `${BASE_URL}${path}`
+  // Asegura slash inicial en path para evitar doble slash o ruta relativa mal formada.
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const url = `${BASE_URL}${normalizedPath}`
   const method = (options.method || 'GET').toUpperCase()
+
+  // Extrae timeoutMs de las opciones antes de pasarlas a fetch.
+  const { timeoutMs: customTimeout, ...fetchOptions } = options
+  const timeoutMs = customTimeout ?? DEFAULT_TIMEOUT_MS
 
   // Solo se envía Content-Type cuando hay body para evitar preflight CORS innecesario en GET/DELETE.
   const headers = {
     Accept: 'application/json',
-    ...(options.headers || {}),
+    ...(fetchOptions.headers || {}),
   }
-  if (options.body) {
+  if (fetchOptions.body) {
     headers['Content-Type'] = 'application/json'
   }
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
   if (isDev) {
-    console.log(`[apiClient] → ${method} ${url}`)
+    console.log(`[apiClient] → ${method} ${url}${fetchOptions.body ? ` BODY: ${String(fetchOptions.body).slice(0, 200)}` : ''}`)
   }
 
   let response
   try {
     response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       headers,
       signal: controller.signal,
     })
   } catch (networkError) {
     clearTimeout(timeoutId)
     if (networkError.name === 'AbortError') {
-      const err = new Error(`Timeout: el servicio no respondió en ${TIMEOUT_MS / 1000} s.`)
+      const err = new Error(`Timeout: el servicio no respondió en ${timeoutMs / 1000} s.`)
       err.type = 'TIMEOUT'
-      if (isDev) console.warn(`[apiClient] TIMEOUT → ${url}`)
+      err.url = url
+      err.method = method
+      if (isDev) console.warn(`[apiClient] TIMEOUT (${timeoutMs / 1000}s) → ${method} ${url}`)
       throw err
     }
-    // Error de red o CORS
+    // Posible error CORS o de red. En navegadores no hay forma fiable de distinguirlos,
+    // pero si el método es POST/PUT/PATCH la causa más probable es un preflight fallido.
+    const isMutating = ['POST', 'PUT', 'PATCH'].includes(method)
+    const corsHint = isMutating
+      ? ' El preflight CORS (OPTIONS) probablemente está bloqueado en API Gateway para este método.'
+      : ''
     const err = new Error(
-      'No se pudo conectar con el servidor. Verifica tu conexión o que el servicio esté disponible.'
+      `No se pudo conectar con el servidor (${method} ${url}).${corsHint}`
     )
-    err.type = 'NETWORK'
-    if (isDev) console.error(`[apiClient] NETWORK ERROR → ${url}`, networkError)
+    err.type = isMutating ? 'CORS_OR_NETWORK' : 'NETWORK'
+    err.url = url
+    err.method = method
+    if (isDev) {
+      if (isMutating) {
+        console.error(`[apiClient] POSIBLE ERROR CORS/PREFLIGHT → ${method} ${url}`, networkError.message)
+      } else {
+        console.error(`[apiClient] NETWORK ERROR → ${method} ${url}`, networkError.message)
+      }
+    }
     throw err
   }
 
@@ -80,22 +103,29 @@ async function request(path, options = {}) {
       // ignorar
     }
     let message
-    if (response.status === 404)      message = 'Recurso no encontrado (404).'
-    else if (response.status === 422)  message = 'Los datos enviados no son válidos (422).'
+    if (response.status === 404)      message = `Recurso no encontrado (404): ${method} ${url}`
+    else if (response.status === 422)  message = 'Los datos enviados no son válidos (422). Revisa los campos del formulario.'
+    else if (response.status === 403)  message = 'Acceso denegado (403). Verifica permisos o CORS en API Gateway.'
     else if (response.status >= 500)   message = 'Error interno del servidor. Intenta más tarde.'
-    else                               message = `Error ${response.status}: ${response.statusText}`
+    else                               message = `Error ${response.status}: ${response.statusText} (${method} ${url})`
 
     const err = new Error(message)
     err.status = response.status
-    err.body = body
+    err.url = url
+    err.method = method
+    err.body = body.slice(0, 500)
     err.type = 'HTTP'
-    if (isDev) console.error(`[apiClient] HTTP ${response.status} → ${url}`, body)
+    if (isDev) console.error(`[apiClient] HTTP ${response.status} → ${method} ${url}`, body.slice(0, 300))
     throw err
   }
 
-  // Respuesta vacía (204 No Content, etc.)
+  // Respuesta vacía (204 No Content)
+  if (response.status === 204) return null
+
   const text = await response.text()
-  if (isDev && text) {
+  if (!text || !text.trim()) return null
+
+  if (isDev) {
     console.log(`[apiClient] BODY ← ${url}:`, text.slice(0, 300) + (text.length > 300 ? '…' : ''))
   }
   if (!text || !text.trim()) return null

@@ -19,6 +19,6 @@ export const agregadorService = {
   /** Resumen completo de un pedido con cliente y libros. */
   getResumenPedido:   (id) => apiRequest(`${MS4_PREFIX}/resumen-pedido/${id}`),
 
-  /** [Rúbrica MS4 · GET] Catálogo enriquecido con estadísticas. */
-  getCatalogoConStats: ()  => apiRequest(`${MS4_PREFIX}/catalogo-con-stats`),
+  /** [Rúbrica MS4 · GET] Catálogo enriquecido con estadísticas (timeout extendido a 45 s por volumen de datos). */
+  getCatalogoConStats: ()  => apiRequest(`${MS4_PREFIX}/catalogo-con-stats`, { timeoutMs: 45_000 }),
 }

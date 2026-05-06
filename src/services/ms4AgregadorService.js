@@ -8,15 +8,16 @@
  * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms4/docs
  */
 
-import apiClient from './apiClient'
+import apiClient, { apiRequest } from './apiClient'
 
 const P = '/ms4'
 
 /** Health check — GET /ms4/health */
 export const healthCheck = () => apiClient.get(`${P}/health`)
 
-/** [Rúbrica MS4 · GET] Catálogo enriquecido con estadísticas. */
-export const getCatalogoConStats = () => apiClient.get(`${P}/catalogo-con-stats`)
+/** [Rúbrica MS4 · GET] Catálogo enriquecido con estadísticas (timeout extendido a 45 s por volumen de datos). */
+export const getCatalogoConStats = () =>
+  apiRequest(`${P}/catalogo-con-stats`, { timeoutMs: 45_000 })
 
 /** [Rúbrica MS4 · GET] Detalle completo de un libro (datos + autor + reseñas + stats). */
 export const getDetalleLibro = (id) => apiClient.get(`${P}/detalle-libro/${id}`)
