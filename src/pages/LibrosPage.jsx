@@ -43,6 +43,7 @@ export default function LibrosPage() {
   const [formError,   setFormError]   = useState(null)
   const [submitting,  setSubmitting]  = useState(false)
   const [filter,      setFilter]      = useState('')
+  const [successMsg,  setSuccessMsg]  = useState(null)
 
   const [searchParams] = useSearchParams()
 
@@ -118,10 +119,28 @@ export default function LibrosPage() {
         idioma:          form.idioma?.trim() || 'Español',
       }
       console.log('[createLibro payload final]', payload)
-      await createLibro(payload)
+      const response = await createLibro(payload)
+      console.log('[createLibro response]', response)
+
+      // Extraer el libro creado de la respuesta (varios formatos posibles)
+      const createdBook = response?.libro ?? response?.item ?? response?.data ?? response
+
       setForm(EMPTY_FORM)
       setShowForm(false)
-      await fetchAll()
+      setSuccessMsg(`Libro "${payload.titulo}" creado correctamente.`)
+
+      if (createdBook && createdBook.id) {
+        // Inserción optimista: evita duplicados por id o isbn
+        setLibros((prev) => {
+          const alreadyExists = prev.some(
+            (l) => l.id === createdBook.id || (l.isbn && l.isbn === createdBook.isbn)
+          )
+          return alreadyExists ? prev : [createdBook, ...prev]
+        })
+      } else {
+        // Backend no devolvió el libro: recargar con límite mayor para buscarlo
+        await fetchAll()
+      }
     } catch (err) {
       const msg = (err.type === 'CORS_OR_NETWORK' || err.type === 'NETWORK')
         ? `POST /libros fue bloqueado por CORS/preflight. Verifica que la URL sea /libros sin barra final y sin headers extra. Detalle: ${err.message}`
@@ -161,6 +180,14 @@ export default function LibrosPage() {
             {showForm ? 'Cancelar' : '+ Nuevo libro'}
           </button>
         </div>
+
+        {/* ── Banner de éxito ── */}
+        {successMsg && (
+          <div className="alert alert--success">
+            ✅ {successMsg}&nbsp;
+            <button className="btn btn--ghost btn--sm" onClick={() => setSuccessMsg(null)}>✕</button>
+          </div>
+        )}
 
         {/* ── Formulario de creación ── */}
         {showForm && (
