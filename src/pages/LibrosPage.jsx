@@ -14,8 +14,8 @@ import {
 } from '../services/ms1CatalogoService'
 
 const EMPTY_FORM = {
-  titulo: '', precio: '', descripcion: '',
-  autor_id: '', genero_id: '', editorial_id: '',
+  titulo: '', precio: '', autor_id: '', genero_id: '', editorial_id: '',
+  isbn: '', stock: '', año_publicacion: '', paginas: '', idioma: '',
 }
 
 /** Normaliza un libro independientemente del naming del backend. */
@@ -103,12 +103,16 @@ export default function LibrosPage() {
     setSubmitting(true)
     try {
       const payload = {
-        titulo:       form.titulo.trim(),
-        descripcion:  form.descripcion.trim() || undefined,
-        precio:       Number(form.precio),
-        autor_id:     form.autor_id     ? Number(form.autor_id)     : undefined,
-        genero_id:    form.genero_id    ? Number(form.genero_id)    : undefined,
-        editorial_id: form.editorial_id ? Number(form.editorial_id) : undefined,
+        titulo:           form.titulo.trim(),
+        precio:           Number(form.precio),
+        autor_id:         form.autor_id     ? Number(form.autor_id)     : undefined,
+        genero_id:        form.genero_id    ? Number(form.genero_id)    : undefined,
+        editorial_id:     form.editorial_id ? Number(form.editorial_id) : undefined,
+        isbn:             form.isbn?.trim() || `ISBN-${Date.now()}`,
+        stock:            Number(form.stock || 0),
+        año_publicacion:  Number(form.año_publicacion || new Date().getFullYear()),
+        paginas:          Number(form.paginas || 1),
+        idioma:           form.idioma?.trim() || 'Español',
       }
       console.log('[createLibro] URL esperada:', `${import.meta.env.VITE_API_BASE_URL || '(fallback dev)'}/libros`)
       console.log('[createLibro] payload:', payload)
@@ -210,12 +214,25 @@ export default function LibrosPage() {
                   ))}
                 </select>
               </label>
-              <label className="form-field form-field--full">
-                <span>Descripción</span>
-                <textarea
-                  name="descripcion" value={form.descripcion} onChange={handleChange}
-                  rows={3} placeholder="Descripción breve del libro"
-                />
+              <label className="form-field">
+                <span>ISBN</span>
+                <input name="isbn" value={form.isbn} onChange={handleChange} placeholder="978-..." />
+              </label>
+              <label className="form-field">
+                <span>Stock</span>
+                <input name="stock" type="number" min="0" value={form.stock} onChange={handleChange} placeholder="0" />
+              </label>
+              <label className="form-field">
+                <span>Año de publicación</span>
+                <input name="año_publicacion" type="number" min="1000" max="2100" value={form.año_publicacion} onChange={handleChange} placeholder={new Date().getFullYear()} />
+              </label>
+              <label className="form-field">
+                <span>Páginas</span>
+                <input name="paginas" type="number" min="1" value={form.paginas} onChange={handleChange} placeholder="1" />
+              </label>
+              <label className="form-field">
+                <span>Idioma</span>
+                <input name="idioma" value={form.idioma} onChange={handleChange} placeholder="Español" />
               </label>
             </div>
             <div className="form-actions">
