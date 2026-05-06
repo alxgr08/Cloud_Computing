@@ -1,6 +1,11 @@
-/**
+﻿/**
  * ResenasPage — Gestión de reseñas
  * Consume MS3: GET /resenas, POST /resenas, DELETE /resenas/:id
+ *
+ * Rutas reales (SIN prefijo /ms3):
+ *   GET /resenas?limit=20            → lista paginada
+ *   GET /resenas?libro_id=1          → filtrada por libro (confirmada ✔)
+ *   POST /resenas                    → crear reseña
  */
 import { useState, useEffect, useCallback } from 'react'
 import LoadingState from '../components/common/LoadingState'
@@ -27,19 +32,26 @@ function normResena(r) {
 }
 
 export default function ResenasPage() {
-  const [resenas,    setResenas]    = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState(null)
-  const [showForm,   setShowForm]   = useState(false)
-  const [form,       setForm]       = useState(EMPTY_FORM)
-  const [formError,  setFormError]  = useState(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [resenas,         setResenas]         = useState([])
+  const [loading,         setLoading]         = useState(true)
+  const [error,           setError]           = useState(null)
+  const [showForm,        setShowForm]        = useState(false)
+  const [form,            setForm]            = useState(EMPTY_FORM)
+  const [formError,       setFormError]       = useState(null)
+  const [submitting,      setSubmitting]      = useState(false)
+  // currentLibroId: null = todas; number = filtrar por libro_id
+  const [currentLibroId,  setCurrentLibroId]  = useState(null)
+  const [createBanner,    setCreateBanner]    = useState(null)  // mensaje post-create
 
-  const fetchResenas = useCallback(async () => {
+  // ── Fetch ──────────────────────────────────────────────────────────────────
+  // params se pasa explícitamente para que post-create pueda filtrar por libro_id.
+  const fetchResenas = useCallback(async (params = {}) => {
     setLoading(true)
     setError(null)
     try {
-      const data = await getResenas({})  // GET /resenas (all)
+      // Si no hay params, pedir con limit=20 para evitar cargar toda la tabla.
+      const queryParams = Object.keys(params).length > 0 ? params : { limit: 20 }
+      const data = await getResenas(queryParams)
       setResenas(Array.isArray(data) ? data : [])
     } catch (err) {
       setError(err.message)
@@ -55,9 +67,11 @@ export default function ResenasPage() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
+  // ── Crear reseña ───────────────────────────────────────────────────────────
   async function handleSubmit(e) {
     e.preventDefault()
     setFormError(null)
+    setCreateBanner(null)
 
     const rat = Number(form.rating)
     if (!form.libro_id)                          return setFormError('El ID del libro es requerido.')
@@ -66,24 +80,33 @@ export default function ResenasPage() {
     if (isNaN(rat) || rat < 1 || rat > 5)        return setFormError('La calificación debe estar entre 1 y 5.')
     if (!form.comentario.trim())                 return setFormError('El comentario es requerido.')
 
+    const libroId = Number(form.libro_id)
+
     setSubmitting(true)
     try {
       const payload = {
-        libro_id:   Number(form.libro_id),
+        libro_id:   libroId,
         cliente_id: Number(form.cliente_id),
         titulo:     form.titulo.trim(),
         rating:     rat,
         comentario: form.comentario.trim(),
       }
       const created = await createResena(payload)
-      // Optimistic update: add new review to top of list immediately
+
+      // Inserción optimista al tope de la lista (feedback inmediato).
       if (created && created.id) {
         setResenas((prev) => [created, ...prev.filter((r) => r.id !== created.id)])
       }
+
       setForm(EMPTY_FORM)
       setShowForm(false)
-      // Background re-fetch to sync with server
-      fetchResenas()
+
+      // Actualizar filtro al libro recién reseñado y refrescar.
+      // Así la reseña siempre aparece visible aunque el backend pagine.
+      setCurrentLibroId(libroId)
+      setCreateBanner(`Reseña publicada. Mostrando reseñas del libro ${libroId}.`)
+      // Fetch filtrado: GET /resenas?libro_id=X asegura ver la nueva reseña.
+      fetchResenas({ libro_id: libroId })
     } catch (err) {
       setFormError(err.message)
     } finally {
@@ -91,6 +114,7 @@ export default function ResenasPage() {
     }
   }
 
+  // ── Eliminar ───────────────────────────────────────────────────────────────
   async function handleDelete(id) {
     if (!window.confirm('¿Eliminar esta reseña?')) return
     try {
@@ -99,6 +123,18 @@ export default function ResenasPage() {
     } catch (err) {
       alert(`Error al eliminar: ${err.message}`)
     }
+  }
+
+  // ── Filtros manuales ───────────────────────────────────────────────────────
+  function handleVerTodas() {
+    setCurrentLibroId(null)
+    setCreateBanner(null)
+    fetchResenas({ limit: 20 })
+  }
+
+  function handleFiltrarPorLibro(libroId) {
+    setCurrentLibroId(libroId)
+    fetchResenas({ libro_id: libroId })
   }
 
   const displayed = resenas.map(normResena)
@@ -112,10 +148,30 @@ export default function ResenasPage() {
             <h1 className="page-title">⭐ Reseñas</h1>
             <p className="page-badge">MS3 · GET /resenas · POST /resenas</p>
           </div>
-          <button className="btn btn--accent" onClick={() => setShowForm(!showForm)}>
+          <button className="btn btn--accent" onClick={() => { setShowForm(!showForm); setFormError(null) }}>
             {showForm ? 'Cancelar' : '+ Nueva reseña'}
           </button>
         </div>
+
+        {/* ── Banner post-create ── */}
+        {createBanner && (
+          <div className="alert alert--success">
+            ✅ {createBanner}&nbsp;
+            <button className="btn btn--ghost btn--sm" onClick={handleVerTodas}>
+              Ver todas
+            </button>
+          </div>
+        )}
+
+        {/* ── Filtro activo ── */}
+        {currentLibroId && !createBanner && (
+          <div className="filter-bar">
+            <span>Mostrando reseñas del libro <strong>{currentLibroId}</strong></span>
+            <button className="btn btn--ghost btn--sm" onClick={handleVerTodas}>
+              Ver todas
+            </button>
+          </div>
+        )}
 
         {/* ── Formulario de nueva reseña ── */}
         {showForm && (
@@ -174,22 +230,47 @@ export default function ResenasPage() {
           </form>
         )}
 
+        {/* ── Búsqueda manual por libro ── */}
+        <details className="collapsible" style={{ marginBottom: '1rem' }}>
+          <summary className="collapsible__summary">🔍 Filtrar reseñas por libro</summary>
+          <form
+            className="search-inline"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const id = Number(e.target.libroIdFilter.value)
+              if (id > 0) handleFiltrarPorLibro(id)
+            }}
+          >
+            <input
+              name="libroIdFilter" type="number" min="1"
+              className="input-inline" placeholder="ID del libro"
+            />
+            <button type="submit" className="btn btn--primary">Filtrar</button>
+            {currentLibroId && (
+              <button type="button" className="btn btn--ghost" onClick={handleVerTodas}>
+                Ver todas
+              </button>
+            )}
+          </form>
+        </details>
+
         {/* ── Estados ── */}
         {loading && <LoadingState message="Cargando reseñas desde MS3…" />}
-        {!loading && error && <ErrorState message={error} onRetry={fetchResenas} />}
+        {!loading && error && <ErrorState message={error} onRetry={() => fetchResenas(currentLibroId ? { libro_id: currentLibroId } : { limit: 20 })} />}
         {!loading && !error && displayed.length === 0 && (
-          <EmptyState message="No hay reseñas publicadas todavía." icon="⭐" />
+          <EmptyState message={currentLibroId ? `No hay reseñas para el libro ${currentLibroId}.` : 'No hay reseñas publicadas todavía.'} icon="⭐" />
         )}
 
         {/* ── Tarjetas de reseñas ── */}
         {!loading && !error && displayed.length > 0 && (
           <>
-            <p className="table-count">{displayed.length} reseñas</p>
+            <p className="table-count">{displayed.length} reseñas{currentLibroId ? ` del libro ${currentLibroId}` : ''}</p>
             <div className="resenas-grid">
               {displayed.map((r) => (
                 <article key={r.id} className="resena-card">
                   <header className="resena-card__header">
-                    <span className="resena-card__libro">📚 {r.libro}</span>
+                    <span className="resena-card__libro">📚 Libro: {r.libro}</span>
+                    {r.titulo && <span className="resena-card__titulo">{r.titulo}</span>}
                     <span className="resena-card__stars">
                       {r.calificacion != null
                         ? '⭐'.repeat(Math.min(5, Math.max(1, Math.round(r.calificacion))))
@@ -216,3 +297,22 @@ export default function ResenasPage() {
     </div>
   )
 }
+
+const EMPTY_FORM = {
+  libro_id: '', cliente_id: '', titulo: '', rating: '5', comentario: '',
+}
+
+const STARS = [1, 2, 3, 4, 5]
+
+function normResena(r) {
+  return {
+    id:           r.id,
+    libro:        r.libro        || r.libro_titulo   || r.book  || r.libro_id  || '—',
+    cliente:      r.cliente      || r.cliente_nombre || r.user  || r.cliente_id || '—',
+    calificacion: r.rating       ?? r.calificacion   ?? r.score ?? null,
+    titulo:       r.titulo       || '',
+    comentario:   r.comentario   || r.comment        || r.texto || '',
+    fecha:        r.fecha        || r.created_at     || r.date  || null,
+  }
+}
+

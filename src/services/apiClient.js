@@ -67,24 +67,48 @@ async function request(path, options = {}) {
       if (isDev) console.warn(`[apiClient] TIMEOUT (${timeoutMs / 1000}s) → ${method} ${url}`)
       throw err
     }
-    // Posible error CORS o de red. En navegadores no hay forma fiable de distinguirlos,
-    // pero si el método es POST/PUT/PATCH la causa más probable es un preflight fallido.
-    const isMutating = ['POST', 'PUT', 'PATCH'].includes(method)
-    const corsHint = isMutating
-      ? ' El preflight CORS (OPTIONS) probablemente está bloqueado en API Gateway para este método.'
-      : ''
-    const err = new Error(
-      `No se pudo conectar con el servidor (${method} ${url}).${corsHint}`
+
+    // Detectar posible Mixed Content: ocurre cuando API Gateway redirige a http://ALB
+    // y el navegador bloquea la petición porque la página está en HTTPS.
+    // En JS no se puede obtener la URL de redirección, pero podemos dar el hint.
+    const isFromHttps = typeof window !== 'undefined' && window.location?.protocol === 'https:'
+    const netMsg = networkError?.message || ''
+    const isMixedContent = isFromHttps && (
+      netMsg.toLowerCase().includes('mixed') ||
+      netMsg.toLowerCase().includes('blocked') ||
+      netMsg.toLowerCase().includes('insecure')
     )
-    err.type = isMutating ? 'CORS_OR_NETWORK' : 'NETWORK'
+
+    const isMutating = ['POST', 'PUT', 'PATCH'].includes(method)
+
+    let friendlyMessage
+    if (isMixedContent) {
+      friendlyMessage =
+        `Contenido mixto bloqueado (${method} ${url}). ` +
+        `El API Gateway puede estar redirigiendo a un endpoint HTTP (ALB). ` +
+        `Desde Amplify (HTTPS) el navegador bloquea esas redirecciones. Requiere corrección en backend/API Gateway.`
+    } else if (isMutating) {
+      friendlyMessage =
+        `Solicitud bloqueada por CORS o preflight (${method} ${url}). ` +
+        `El API Gateway/backend no permite este método desde este origen. ` +
+        `Revisa Access-Control-Allow-Origin y Access-Control-Allow-Methods.`
+    } else {
+      friendlyMessage =
+        `No se pudo conectar con el servidor (${method} ${url}). ` +
+        `Causas posibles: CORS bloqueado, Mixed Content (redirect a HTTP/ALB), o servicio inaccesible.`
+    }
+
+    const err = new Error(friendlyMessage)
+    err.type = isMixedContent ? 'MIXED_CONTENT' : (isMutating ? 'CORS_OR_NETWORK' : 'NETWORK')
     err.url = url
     err.method = method
+    err.isMixedContent = isMixedContent
     if (isDev) {
-      if (isMutating) {
-        console.error(`[apiClient] POSIBLE ERROR CORS/PREFLIGHT → ${method} ${url}`, networkError.message)
-      } else {
-        console.error(`[apiClient] NETWORK ERROR → ${method} ${url}`, networkError.message)
-      }
+      console.error(
+        `[apiClient] NETWORK ERROR → ${method} ${url}`,
+        networkError.message,
+        isMixedContent ? '(posible Mixed Content / HTTP ALB redirect)' : ''
+      )
     }
     throw err
   }

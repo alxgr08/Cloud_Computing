@@ -50,9 +50,15 @@ export default function LibrosPage() {
     setLoading(true)
     setError(null)
     try {
-      // Libros es crítico; el resto son complementarios para los selects
+      // Libros es crítico; el resto son complementarios para los selects.
+      // SIEMPRE usar ?limit=N: /libros sin query param devuelve 404 en este API Gateway.
       const [librosRes, autoresRes, generosRes, editorialesRes] =
-        await Promise.allSettled([getLibros(), getAutores(), getGeneros(), getEditoriales()])
+        await Promise.allSettled([
+          getLibros({ limit: 20 }),
+          getAutores({ limit: 100 }),
+          getGeneros(),
+          getEditoriales({ limit: 100 }),
+        ])
 
       if (librosRes.status === 'rejected') throw librosRes.reason
       setLibros(Array.isArray(librosRes.value) ? librosRes.value : [])
@@ -138,7 +144,7 @@ export default function LibrosPage() {
         <div className="page-header">
           <div>
             <h1 className="page-title">📚 Catálogo de libros</h1>
-            <p className="page-badge">MS1 · GET /libros · POST /libros</p>
+            <p className="page-badge">MS1 · GET /libros?limit=20 · POST /libros</p>
           </div>
           <button className="btn btn--accent" onClick={() => setShowForm(!showForm)}>
             {showForm ? 'Cancelar' : '+ Nuevo libro'}

@@ -36,40 +36,43 @@ cp .env.example .env
 
 ## Microservicios consumidos
 
-| MS | Nombre | Swagger UI | Prefijo |
-|---|---|---|---|
-| MS1 | Catálogo | `/ms1/docs` | `/ms1` |
-| MS2 | Pedidos | `/ms2/docs` | `/ms2` |
-| MS3 | Reseñas | `/ms3/docs` | `/ms3` |
-| MS4 | Agregador | `/ms4/docs` | `/ms4` |
-| MS5 | Analytics | `/ms5/docs` | `/ms5` |
+> El API Gateway expone cada microservicio con la siguiente configuración de prefijos.
+> **Solo MS2 usa prefijo `/ms2`**. El resto se accede sin prefijo.
+
+| MS | Nombre | Prefijo en API Gateway |
+|---|---|---|
+| MS1 | Catálogo | *(sin prefijo)* |
+| MS2 | Pedidos | `/ms2` |
+| MS3 | Reseñas | *(sin prefijo)* |
+| MS4 | Agregador | *(sin prefijo)* |
+| MS5 | Analytics | *(sin prefijo)* |
 
 ---
 
 ## Endpoints usados por pantalla (Rúbrica)
 
-| Microservicio | Endpoint | Método | Pantalla |
+| Microservicio | Endpoint real (relativo al API Gateway) | Método | Pantalla |
 |---|---|---|---|
-| MS1 Catálogo | `/ms1/libros` | GET | LibrosPage |
-| MS1 Catálogo | `/ms1/libros` | POST | LibrosPage |
-| MS1 Catálogo | `/ms1/libros/:id` | DELETE | LibrosPage |
-| MS1 Catálogo | `/ms1/autores` | GET | LibrosPage (select) |
-| MS1 Catálogo | `/ms1/generos` | GET | LibrosPage (select) |
-| MS1 Catálogo | `/ms1/editoriales` | GET | LibrosPage (select) |
-| MS2 Pedidos | `/ms2/pedidos` | GET | PedidosPage |
+| MS1 Catálogo | `/libros?limit=20` | GET | LibrosPage |
+| MS1 Catálogo | `/libros` | POST | LibrosPage |
+| MS1 Catálogo | `/libros/:id` | DELETE | LibrosPage |
+| MS1 Catálogo | `/autores?limit=100` | GET | LibrosPage (select) |
+| MS1 Catálogo | `/generos` | GET | LibrosPage (select) |
+| MS1 Catálogo | `/editoriales?limit=100` | GET | LibrosPage (select) |
+| MS2 Pedidos | `/ms2/pedidos/:id` | GET | PedidosPage |
 | MS2 Pedidos | `/ms2/pedidos` | POST | PedidosPage |
-| MS2 Pedidos | `/ms2/clientes` | GET | PedidosPage |
-| MS3 Reseñas | `/ms3/resenas` | GET | ResenasPage |
-| MS3 Reseñas | `/ms3/resenas` | POST | ResenasPage |
-| MS3 Reseñas | `/ms3/resenas/:id` | DELETE | ResenasPage |
-| MS4 Agregador | `/ms4/catalogo-con-stats` | GET | CatalogoPage |
-| MS4 Agregador | `/ms4/detalle-libro/:id` | GET | DetalleLibroPage |
-| MS4 Agregador | `/ms4/perfil-cliente/:id` | GET | PerfilClientePage |
-| MS5 Analytics | `/ms5/ventas-por-genero` | GET | AnalyticsPage |
-| MS5 Analytics | `/ms5/top-autores` | GET | AnalyticsPage |
-| MS5 Analytics | `/ms5/top-clientes` | GET | AnalyticsPage |
-| MS5 Analytics | `/ms5/rating-por-genero` | GET | AnalyticsPage |
-| MS5 Analytics | `/ms5/libros-mas-vendidos` | GET | AnalyticsPage |
+| MS2 Pedidos | `/ms2/clientes/:id` | GET | PedidosPage |
+| MS3 Reseñas | `/resenas?limit=20` | GET | ResenasPage |
+| MS3 Reseñas | `/resenas?libro_id=:id` | GET | ResenasPage (filtro) |
+| MS3 Reseñas | `/resenas` | POST | ResenasPage |
+| MS3 Reseñas | `/resenas/:id` | DELETE | ResenasPage |
+| MS4 Agregador | `/catalogo-con-stats` | GET | CatalogoPage |
+| MS4 Agregador | `/detalle-libro/:id` | GET | DetalleLibroPage |
+| MS4 Agregador | `/perfil-cliente/:id` | GET | PerfilClientePage |
+| MS5 Analytics | `/ventas-por-genero` | GET | AnalyticsPage |
+| MS5 Analytics | `/top-autores` | GET | AnalyticsPage |
+| MS5 Analytics | `/rating-por-genero` | GET | AnalyticsPage |
+| MS5 Analytics | `/libros-mas-vendidos` | GET | AnalyticsPage |
 
 ---
 
