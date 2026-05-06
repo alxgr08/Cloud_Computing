@@ -97,25 +97,27 @@ export default function LibrosPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setFormError(null)
-    if (!form.titulo.trim())              return setFormError('El título es requerido.')
+    if (!form.titulo.trim())                     return setFormError('El título es requerido.')
     if (!form.precio || Number(form.precio) <= 0) return setFormError('El precio debe ser mayor a 0.')
+    if (!form.autor_id)                          return setFormError('El autor es requerido.')
+    if (!form.editorial_id)                      return setFormError('La editorial es requerida.')
+    if (!form.genero_id)                         return setFormError('El género es requerido.')
 
     setSubmitting(true)
     try {
       const payload = {
-        titulo:           form.titulo.trim(),
-        precio:           Number(form.precio),
-        autor_id:         form.autor_id     ? Number(form.autor_id)     : undefined,
-        genero_id:        form.genero_id    ? Number(form.genero_id)    : undefined,
-        editorial_id:     form.editorial_id ? Number(form.editorial_id) : undefined,
-        isbn:             form.isbn?.trim() || `ISBN-${Date.now()}`,
-        stock:            Number(form.stock || 0),
-        año_publicacion:  Number(form.año_publicacion || new Date().getFullYear()),
-        paginas:          Number(form.paginas || 1),
-        idioma:           form.idioma?.trim() || 'Español',
+        titulo:          form.titulo.trim(),
+        autor_id:        Number(form.autor_id),
+        editorial_id:    Number(form.editorial_id),
+        genero_id:       Number(form.genero_id),
+        isbn:            form.isbn?.trim() || `ISBN-${Date.now()}`,
+        precio:          Number(form.precio),
+        stock:           Number(form.stock || 0),
+        año_publicacion: Number(form.año_publicacion || new Date().getFullYear()),
+        paginas:         Number(form.paginas || 1),
+        idioma:          form.idioma?.trim() || 'Español',
       }
-      console.log('[createLibro] URL esperada:', `${import.meta.env.VITE_API_BASE_URL || '(fallback dev)'}/libros`)
-      console.log('[createLibro] payload:', payload)
+      console.log('[createLibro payload final]', payload)
       await createLibro(payload)
       setForm(EMPTY_FORM)
       setShowForm(false)
