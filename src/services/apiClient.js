@@ -6,16 +6,20 @@
  *   VITE_API_BASE_URL=https://47c36x353h.execute-api.us-east-1.amazonaws.com
  */
 
-// Elimina la barra final de BASE_URL para no producir doble slash.
+const isDev = import.meta.env.DEV
+
+// En desarrollo se usa la URL hardcodeada como fallback si no hay .env.
+// En producción (Amplify) se exige VITE_API_BASE_URL; si falta queda vacía
+// y las llamadas fallarán, pero la UI mostrará error claro.
 const BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
-  'https://47c36x353h.execute-api.us-east-1.amazonaws.com'
+  (isDev ? 'https://47c36x353h.execute-api.us-east-1.amazonaws.com' : '')
 ).replace(/\/$/, '')
+
+export { BASE_URL }
 
 /** Timeout por defecto (30 s). Se puede sobreescribir por petición con la opción timeoutMs. */
 const DEFAULT_TIMEOUT_MS = 30_000
-
-const isDev = import.meta.env.DEV
 
 /**
  * Ejecuta una petición HTTP contra el API Gateway.

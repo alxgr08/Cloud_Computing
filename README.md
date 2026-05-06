@@ -175,6 +175,10 @@ La app estará disponible en `http://localhost:5173`.
 |---|---|
 | `VITE_API_BASE_URL` | `https://47c36x353h.execute-api.us-east-1.amazonaws.com` |
 
+> ⚠️ **Importante:** Vite inyecta las variables de entorno **durante el build**, no en tiempo de ejecución.
+> Si agregas o cambias `VITE_API_BASE_URL` en Amplify, debes hacer **redeploy** para que el cambio tenga efecto.
+> La app desplegada sin esta variable mostrará el error "VITE_API_BASE_URL no configurada" en la página `/api-test`.
+
 6. Guardar y desplegar.
 
 ### amplify.yml (opcional)
