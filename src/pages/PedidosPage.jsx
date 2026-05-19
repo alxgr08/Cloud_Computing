@@ -22,7 +22,6 @@ import {
   getClienteById,
   getPedidoById,
   getPedidosPorCliente,
-  getPedidos,
   createPedido,
 } from '../services/ms2PedidosService'
 
@@ -70,9 +69,6 @@ export default function PedidosPage() {
   const [pedidosCliente,  setPedidosCliente]  = useState(null)
   const [loadingCliente,  setLoadingCliente]  = useState(false)
   const [errorCliente,    setErrorCliente]    = useState(null)
-  const [allPedidos,      setAllPedidos]      = useState(null)
-  const [loadingAll,      setLoadingAll]      = useState(false)
-  const [errorAll,        setErrorAll]        = useState(null)
   const [clienteIdBInput, setClienteIdBInput] = useState('1')
   const [clienteResult,   setClienteResult]   = useState(null)
   const [loadingClienteB, setLoadingClienteB] = useState(false)
@@ -116,15 +112,6 @@ export default function PedidosPage() {
       setPedidosCliente(Array.isArray(data) ? data : [])
     } catch (err) { setErrorCliente(err.message) }
     finally { setLoadingCliente(false) }
-  }
-
-  async function handleCargarTodos() {
-    setLoadingAll(true); setErrorAll(null); setAllPedidos(null)
-    try {
-      const data = await getPedidos()
-      setAllPedidos(Array.isArray(data) ? data : [])
-    } catch (err) { setErrorAll(err.message) }
-    finally { setLoadingAll(false) }
   }
 
   function handleChange(e) {
@@ -298,30 +285,6 @@ export default function PedidosPage() {
             <div className="table-wrapper" style={{ marginTop: '1rem' }}>
               <table className="data-table">{THEAD}<tbody>{pedidosCliente.map((p) => <PedidoRow key={p.id} p={p} />)}</tbody></table>
             </div>
-          )}
-        </section>
-
-        {/* ── Todos los pedidos ── */}
-        <section className="detail-section">
-          <h2 className="detail-section__title">📋 Todos los pedidos</h2>
-          <div className="alert alert--warning">
-            ⚠️ Este endpoint carga toda la tabla y puede tardar hasta 60 s.
-          </div>
-          {!loadingAll && allPedidos === null && (
-            <button className="btn btn--ghost" onClick={handleCargarTodos}>Cargar todos (puede tardar)</button>
-          )}
-          {loadingAll && <LoadingState message="Cargando todos los pedidos… (hasta 60 s)" />}
-          {!loadingAll && errorAll && <ErrorState message={errorAll} onRetry={handleCargarTodos} />}
-          {!loadingAll && allPedidos !== null && allPedidos.length === 0 && (
-            <EmptyState message="No hay pedidos registrados." icon="🛒" />
-          )}
-          {!loadingAll && allPedidos && allPedidos.length > 0 && (
-            <>
-              <p className="table-count">{allPedidos.length} pedidos</p>
-              <div className="table-wrapper">
-                <table className="data-table">{THEAD}<tbody>{allPedidos.map((p) => <PedidoRow key={p.id} p={p} />)}</tbody></table>
-              </div>
-            </>
           )}
         </section>
 
