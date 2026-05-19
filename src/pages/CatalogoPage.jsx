@@ -14,9 +14,9 @@ function normalizeItem(item) {
   return {
     id:        item.id,
     titulo:    item.titulo    || item.title    || item.nombre || '—',
-    autor:     item.autor     || item.author   || item.autor_nombre  || '—',
-    genero:    item.genero    || item.genre    || item.genero_nombre || '—',
-    editorial: item.editorial || item.publisher || '—',
+    autor:     item.autor     || item.author   || item.autor_nombre  || item.autor_id || '—',
+    genero:    item.genero    || item.genre    || item.genero_nombre || item.genero_id || '—',
+    editorial: item.editorial || item.publisher || item.editorial_nombre || item.editorial_id || '—',
     precio:    item.precio    ?? item.price    ?? null,
     ventas:    item.ventas    ?? item.total_ventas ?? item.sales ?? null,
     rating:    item.rating    ?? item.promedio_rating ?? item.avg_rating ?? null,

@@ -25,7 +25,7 @@ function norm(libro) {
     titulo:    libro.titulo    || libro.title       || libro.nombre || '—',
     autor:     libro.autor     || libro.author      || libro.autor_nombre  || libro.autor_id || '—',
     genero:    libro.genero    || libro.genre       || libro.genero_nombre || libro.genero_id || '—',
-    editorial: libro.editorial || libro.publisher   || libro.editorial_nombre || '—',
+    editorial: libro.editorial || libro.publisher   || libro.editorial_nombre || libro.editorial_id || '—',
     precio:    libro.precio    ?? libro.price       ?? null,
     descripcion: libro.descripcion || libro.description || '',
   }

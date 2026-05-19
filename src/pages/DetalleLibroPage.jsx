@@ -65,19 +65,19 @@ export default function DetalleLibroPage() {
                 <h2 className="detail-card__title">
                   {libro.titulo || libro.title || libro.nombre || '—'}
                 </h2>
-                {(libro.autor || libro.author || libro.autor_nombre) && (
+                {(libro.autor || libro.author || libro.autor_nombre || libro.autor_id) && (
                   <p className="detail-card__meta">
-                    ✍️ {libro.autor || libro.author || libro.autor_nombre}
+                    ✍️ {libro.autor || libro.author || libro.autor_nombre || `Autor ID: ${libro.autor_id}`}
                   </p>
                 )}
-                {(libro.genero || libro.genre || libro.genero_nombre) && (
+                {(libro.genero || libro.genre || libro.genero_nombre || libro.genero_id) && (
                   <p className="detail-card__meta">
-                    🏷️ {libro.genero || libro.genre || libro.genero_nombre}
+                    🏷️ {libro.genero || libro.genre || libro.genero_nombre || `Género ID: ${libro.genero_id}`}
                   </p>
                 )}
-                {(libro.editorial || libro.editorial_nombre) && (
+                {(libro.editorial || libro.editorial_nombre || libro.editorial_id) && (
                   <p className="detail-card__meta">
-                    🏢 {libro.editorial || libro.editorial_nombre}
+                    🏢 {libro.editorial || libro.editorial_nombre || `Editorial ID: ${libro.editorial_id}`}
                   </p>
                 )}
                 {(libro.precio ?? libro.price) != null && (
@@ -153,9 +153,9 @@ export default function DetalleLibroPage() {
               <h3 className="detail-section__title">🔗 Datos del agregador (MS4)</h3>
               <div className="detail-extra">
                 {Object.entries(libro)
-                  .filter(([k]) => !['titulo','title','nombre','autor','author','autor_nombre',
-                    'genero','genre','genero_nombre','editorial','editorial_nombre','precio','price',
-                    'descripcion','description','imagen','image','resenas'].includes(k))
+                  .filter(([k]) => !['id','titulo','title','nombre','autor','author','autor_nombre','autor_id',
+                    'genero','genre','genero_nombre','genero_id','editorial','editorial_nombre','editorial_id','precio','price',
+                    'descripcion','description','imagen','image','resenas','ventas','rating','total_resenas'].includes(k))
                   .map(([k, v]) => (
                     <div key={k} className="detail-extra__row">
                       <span className="detail-extra__key">{k}</span>
