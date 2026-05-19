@@ -4,7 +4,7 @@
  * Rutas reales confirmadas:
  *   GET /resenas?libro_id=1 ✔  GET /resenas/{id} ✔
  *   GET /ms3/resenas ✖ (404)
- * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms3/docs
+ * Swagger: https://6ksot1au1c.execute-api.us-east-1.amazonaws.com/ms3/docs
  */
 import { apiRequest } from './apiClient'
 

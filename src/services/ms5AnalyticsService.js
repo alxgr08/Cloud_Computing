@@ -5,7 +5,7 @@
  *   GET /top-autores ✔  GET /ventas-por-genero ✔
  *   GET /rating-por-genero ✔  GET /libros-mas-vendidos ✔
  *   GET /ms5/top-autores ✖ (404)
- * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms5/docs
+ * Swagger: https://6ksot1au1c.execute-api.us-east-1.amazonaws.com/ms5/docs
  */
 
 import apiClient from './apiClient'

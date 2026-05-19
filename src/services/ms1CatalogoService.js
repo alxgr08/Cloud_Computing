@@ -3,7 +3,7 @@
  * API Gateway: SIN prefijo /ms1.
  * Rutas reales confirmadas: /libros, /autores, /generos, /editoriales
  *   GET /libros?limit=3 ✔  GET /autores?limit=3 ✔  GET /generos ✔
- * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms1/docs
+ * Swagger: https://6ksot1au1c.execute-api.us-east-1.amazonaws.com/ms1/docs
  */
 
 import apiClient, { apiRequest } from './apiClient'

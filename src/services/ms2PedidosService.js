@@ -9,7 +9,7 @@
  *   Clientes: GET /clientes, POST /clientes, GET /clientes/{id}, DELETE /clientes/{id}
  * NOTA: MS2 no expone /health. Se usa GET /ms2/clientes como health check
  *       porque es más liviano que /pedidos (evita timeout).
- * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms2/docs
+ * Swagger: https://6ksot1au1c.execute-api.us-east-1.amazonaws.com/ms2/docs
  */
 
 import apiClient from './apiClient'

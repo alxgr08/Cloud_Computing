@@ -1,19 +1,19 @@
 /**
  * MS4 — Agregador
  * API Gateway: SIN prefijo /ms4.
- * Rutas reales (diagnóstico 2026-05):
- *   GET /detalle-libro/1       ✔  (healthCheck)
- *   GET /ms4/detalle-libro/1   ✔
- *   GET /perfil-cliente/1      ✖ 404
- *   GET /ms4/perfil-cliente/1  ✖ 404
+ * Rutas confirmadas:
+ *   GET /detalle-libro/:id     ✔  (obtiene detalle de un libro específico)
+ *   GET /libros?limit=1        ✔  (health check)
+ *   GET /perfil-cliente/:id    ✖ 404
+ *   GET /ms4/perfil-cliente/:id ✖ 404
  *   GET /catalogo-con-stats    ✖ 503 / error interno
- * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms4/docs
+ * Swagger: https://6ksot1au1c.execute-api.us-east-1.amazonaws.com/ms4/docs
  */
 
 import apiClient, { apiRequest } from './apiClient'
 
-/** Health check — GET /detalle-libro/1 */
-export const healthCheck = () => apiClient.get(`/detalle-libro/1`)
+/** Health check — GET /libros?limit=1 (verifica conectividad con el agregador vía MS1) */
+export const healthCheck = () => apiClient.get(`/libros?limit=1`)
 
 /** [Rúbrica MS4 · GET] Catálogo enriquecido con estadísticas (timeout extendido a 45 s). */
 export const getCatalogoConStats = () =>

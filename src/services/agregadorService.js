@@ -1,16 +1,17 @@
 /**
  * MS4 — Agregador (servicio con patrón objeto)
  * API Gateway: SIN prefijo /ms4.
- * Rutas reales confirmadas:
- *   GET /perfil-cliente/1 ✔  GET /detalle-libro/1 ✔
- *   GET /ms4/perfil-cliente/1 ✖ (404)
- * Swagger: https://47c36x353h.execute-api.us-east-1.amazonaws.com/ms4/docs
+ * Rutas confirmadas:
+ *   GET /detalle-libro/:id     ✔  (obtiene detalle de un libro específico)
+ *   GET /libros?limit=1        ✔  (health check)
+ *   GET /ms4/perfil-cliente/:id ✖ (404)
+ * Swagger: https://6ksot1au1c.execute-api.us-east-1.amazonaws.com/ms4/docs
  */
 import { apiRequest } from './apiClient'
 
 export const agregadorService = {
-  /** Health check — GET /detalle-libro/1 (comprueba conexión con MS4). */
-  healthCheck:         ()  => apiRequest(`/detalle-libro/1`),
+  /** Health check — GET /libros?limit=1 (verifica conectividad con el agregador vía MS1). */
+  healthCheck:         ()  => apiRequest(`/libros?limit=1`),
 
   /** Perfil completo de un cliente (datos + pedidos + reseñas). */
   getPerfilCliente:   (id) => apiRequest(`/perfil-cliente/${id}`),

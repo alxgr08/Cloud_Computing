@@ -13,7 +13,7 @@ BiblioMercado es una SPA (Single Page Application) en React que consume datos re
 ## URL base del API Gateway
 
 ```
-https://47c36x353h.execute-api.us-east-1.amazonaws.com
+https://6ksot1au1c.execute-api.us-east-1.amazonaws.com
 ```
 
 Todas las llamadas HTTP van exclusivamente a esta URL. **No se usan IPs directas ni localhost en producción.**
@@ -30,7 +30,7 @@ cp .env.example .env
 
 | Variable | Valor | Descripción |
 |---|---|---|
-| `VITE_API_BASE_URL` | `https://47c36x353h.execute-api.us-east-1.amazonaws.com` | URL base del API Gateway |
+| `VITE_API_BASE_URL` | `https://6ksot1au1c.execute-api.us-east-1.amazonaws.com` | URL base del API Gateway |
 
 ---
 
@@ -173,7 +173,7 @@ La app estará disponible en `http://localhost:5173`.
 
 | Clave | Valor |
 |---|---|
-| `VITE_API_BASE_URL` | `https://47c36x353h.execute-api.us-east-1.amazonaws.com` |
+| `VITE_API_BASE_URL` | `https://6ksot1au1c.execute-api.us-east-1.amazonaws.com` |
 
 > ⚠️ **Importante:** Vite inyecta las variables de entorno **durante el build**, no en tiempo de ejecución.
 > Si agregas o cambias `VITE_API_BASE_URL` en Amplify, debes hacer **redeploy** para que el cambio tenga efecto.

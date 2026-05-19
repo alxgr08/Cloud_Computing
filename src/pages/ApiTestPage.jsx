@@ -13,7 +13,7 @@ const _IS_DEV       = import.meta.env.DEV
 const _BASE_DISPLAY = _ENV_URL
   ? _ENV_URL
   : _IS_DEV
-    ? 'https://47c36x353h.execute-api.us-east-1.amazonaws.com (fallback dev)'
+    ? 'https://6ksot1au1c.execute-api.us-east-1.amazonaws.com (fallback dev)'
     : null
 
 // ── A. Pruebas principales ─────────────────────────────────────────────────

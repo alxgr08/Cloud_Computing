@@ -3,7 +3,7 @@
  * Todas las llamadas al backend deben pasar por este módulo.
  *
  * Variable de entorno requerida:
- *   VITE_API_BASE_URL=https://47c36x353h.execute-api.us-east-1.amazonaws.com
+ *   VITE_API_BASE_URL=https://6ksot1au1c.execute-api.us-east-1.amazonaws.com
  */
 
 const isDev = import.meta.env.DEV
@@ -13,7 +13,7 @@ const isDev = import.meta.env.DEV
 // y las llamadas fallarán, pero la UI mostrará error claro.
 const BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
-  (isDev ? 'https://47c36x353h.execute-api.us-east-1.amazonaws.com' : '')
+  (isDev ? 'https://6ksot1au1c.execute-api.us-east-1.amazonaws.com' : '')
 ).replace(/\/$/, '')
 
 export { BASE_URL }
