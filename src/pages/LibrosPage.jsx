@@ -9,9 +9,22 @@ import LoadingState from '../components/common/LoadingState'
 import ErrorState   from '../components/common/ErrorState'
 import EmptyState   from '../components/common/EmptyState'
 import {
-  getLibros, createLibro, deleteLibro,
+  getLibros, getLibroById, createLibro, deleteLibro,
   getAutores, getGeneros, getEditoriales,
 } from '../services/ms1CatalogoService'
+
+const LS_KEY = 'bibliomercado_libros_creados'
+
+function getSavedIds() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]') } catch { return [] }
+}
+function saveId(id) {
+  const ids = getSavedIds()
+  if (!ids.includes(id)) localStorage.setItem(LS_KEY, JSON.stringify([...ids, id]))
+}
+function removeId(id) {
+  localStorage.setItem(LS_KEY, JSON.stringify(getSavedIds().filter((x) => x !== id)))
+}
 
 const EMPTY_FORM = {
   titulo: '', precio: '', autor_id: '', genero_id: '', editorial_id: '',
@@ -44,6 +57,7 @@ export default function LibrosPage() {
   const [isbnError,   setIsbnError]   = useState(null)
   const [submitting,  setSubmitting]  = useState(false)
   const [filter,      setFilter]      = useState('')
+  const [page,        setPage]        = useState(0)
   const [successMsg,  setSuccessMsg]  = useState(null)
 
   const [searchParams] = useSearchParams()
@@ -56,14 +70,24 @@ export default function LibrosPage() {
       // SIEMPRE usar ?limit=N: /libros sin query param devuelve 404 en este API Gateway.
       const [librosRes, autoresRes, generosRes, editorialesRes] =
         await Promise.allSettled([
-          getLibros({ limit: 20 }),
+          getLibros({ limit: 200 }),
           getAutores({ limit: 100 }),
           getGeneros(),
           getEditoriales({ limit: 100 }),
         ])
 
       if (librosRes.status === 'rejected') throw librosRes.reason
-      setLibros(Array.isArray(librosRes.value) ? librosRes.value : [])
+      const mainList = Array.isArray(librosRes.value) ? librosRes.value : []
+
+      // Re-fetch any books the user created that may not appear in the first N results
+      const savedIds = getSavedIds()
+      const missingIds = savedIds.filter((id) => !mainList.some((l) => l.id === id))
+      const extraBooks = await Promise.allSettled(missingIds.map((id) => getLibroById(id)))
+      const resolved = extraBooks
+        .filter((r) => r.status === 'fulfilled' && r.value)
+        .map((r) => r.value)
+
+      setLibros([...resolved, ...mainList])
       if (autoresRes.status     === 'fulfilled') setAutores(Array.isArray(autoresRes.value)     ? autoresRes.value     : [])
       if (generosRes.status     === 'fulfilled') setGeneros(Array.isArray(generosRes.value)     ? generosRes.value     : [])
       if (editorialesRes.status === 'fulfilled') setEditoriales(Array.isArray(editorialesRes.value) ? editorialesRes.value : [])
@@ -81,16 +105,21 @@ export default function LibrosPage() {
     if (searchParams.get('nuevo') === '1') setShowForm(true)
   }, [fetchAll, searchParams])
 
-  const displayed = libros.filter((l) => {
+  const PAGE_SIZE = 20
+  const filtered = libros.filter((l) => {
     const q = filter.trim().toLowerCase()
     if (!q) return true
     const n = norm(l)
+    const generoNombre = labelFor(generos, l.genero_id, String(n.genero))
+    const autorNombre  = labelFor(autores, l.autor_id,  String(n.autor))
     return (
       n.titulo.toLowerCase().includes(q) ||
-      String(n.autor).toLowerCase().includes(q) ||
-      String(n.genero).toLowerCase().includes(q)
+      autorNombre.toLowerCase().includes(q) ||
+      generoNombre.toLowerCase().includes(q)
     )
   })
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const displayed = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -145,6 +174,8 @@ export default function LibrosPage() {
       setSuccessMsg(`Libro "${payload.titulo}" creado correctamente.`)
 
       if (createdBook && createdBook.id) {
+        // Persist ID so it survives page refresh
+        saveId(createdBook.id)
         // Inserción optimista: evita duplicados por id o isbn
         setLibros((prev) => {
           const alreadyExists = prev.some(
@@ -170,6 +201,7 @@ export default function LibrosPage() {
     if (!window.confirm(`¿Eliminar "${titulo}"?`)) return
     try {
       await deleteLibro(id)
+      removeId(id)
       setLibros((prev) => prev.filter((l) => l.id !== id))
     } catch (err) {
       alert(`Error al eliminar: ${err.message}`)
@@ -306,7 +338,7 @@ export default function LibrosPage() {
             type="search"
             placeholder="Buscar por título, autor o género…"
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={(e) => { setFilter(e.target.value); setPage(0) }}
           />
           {filter && (
             <button className="btn btn--ghost btn--sm" onClick={() => setFilter('')}>
@@ -318,15 +350,16 @@ export default function LibrosPage() {
         {/* ── Estados ── */}
         {loading && <LoadingState message="Cargando catálogo desde MS1…" />}
         {!loading && error && <ErrorState message={error} onRetry={fetchAll} />}
-        {!loading && !error && displayed.length === 0 && (
+        {!loading && !error && filtered.length === 0 && (
           <EmptyState message="No se encontraron libros." icon="📚" />
         )}
 
         {/* ── Tabla ── */}
-        {!loading && !error && displayed.length > 0 && (
+        {!loading && !error && filtered.length > 0 && (
           <>
             <p className="table-count">
-              {displayed.length} {displayed.length === 1 ? 'libro' : 'libros'}
+              {filtered.length} {filtered.length === 1 ? 'libro' : 'libros'}
+              {totalPages > 1 && <> &mdash; página {page + 1} de {totalPages}</>}
             </p>
             <div className="table-wrapper">
               <table className="data-table">
@@ -375,6 +408,28 @@ export default function LibrosPage() {
                 </tbody>
               </table>
             </div>
+            {/* ── Paginación ── */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginTop: '1.25rem' }}>
+                <button
+                  className="btn btn--outline-dark btn--sm"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                >
+                  ← Anterior
+                </button>
+                <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+                  {page + 1} / {totalPages}
+                </span>
+                <button
+                  className="btn btn--outline-dark btn--sm"
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

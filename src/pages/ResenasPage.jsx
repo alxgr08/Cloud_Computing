@@ -281,12 +281,6 @@ export default function ResenasPage() {
                   <footer className="resena-card__footer">
                     <span>👤 {r.cliente}</span>
                     {r.fecha && <span>{new Date(r.fecha).toLocaleDateString()}</span>}
-                    <button
-                      className="btn btn--danger btn--sm"
-                      onClick={() => handleDelete(r.id)}
-                    >
-                      Eliminar
-                    </button>
                   </footer>
                 </article>
               ))}
