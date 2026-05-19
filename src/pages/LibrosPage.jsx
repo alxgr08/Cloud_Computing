@@ -78,6 +78,7 @@ export default function LibrosPage() {
     fetchAll()
     const q = searchParams.get('search')
     if (q) setFilter(q)
+    if (searchParams.get('nuevo') === '1') setShowForm(true)
   }, [fetchAll, searchParams])
 
   const displayed = libros.filter((l) => {
@@ -351,9 +352,9 @@ export default function LibrosPage() {
                             {n.titulo}
                           </Link>
                         </td>
-                        <td>{n.autor}</td>
-                        <td>{n.genero}</td>
-                        <td>{n.editorial}</td>
+                        <td>{labelFor(autores, libro.autor_id, n.autor)}</td>
+                        <td>{labelFor(generos, libro.genero_id, n.genero)}</td>
+                        <td>{labelFor(editoriales, libro.editorial_id, n.editorial)}</td>
                         <td>{n.precio != null ? `$${Number(n.precio).toFixed(2)}` : '—'}</td>
                         <td>
                           <div className="table-actions">

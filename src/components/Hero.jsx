@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom'
 import SearchBar from './SearchBar'
 
 function Hero({ onSearch }) {
+  const navigate = useNavigate()
+
   return (
     <section id="inicio" className="hero">
       {/* Radial glow decorations */}
@@ -23,12 +26,12 @@ function Hero({ onSearch }) {
         </p>
 
         <div className="hero__actions">
-          <a href="#explorar" className="btn btn--accent btn--lg">
+          <button onClick={() => navigate('/libros')} className="btn btn--accent btn--lg">
             Explorar libros
-          </a>
-          <a href="#publicar" className="btn btn--outline-hero btn--lg">
+          </button>
+          <button onClick={() => navigate('/libros?nuevo=1')} className="btn btn--outline-hero btn--lg">
             Publicar un libro
-          </a>
+          </button>
         </div>
 
         {/* Barra de búsqueda principal */}

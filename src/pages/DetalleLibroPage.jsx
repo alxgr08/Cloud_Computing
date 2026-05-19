@@ -2,9 +2,11 @@
  * DetalleLibroPage — Detalle completo de un libro
  * Consume MS4: GET /detalle-libro/:id
  */
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useApi }          from '../hooks/useApi'
 import { getDetalleLibro } from '../services/ms4AgregadorService'
+import { getAutores, getGeneros, getEditoriales } from '../services/ms1CatalogoService'
 import LoadingState from '../components/common/LoadingState'
 import ErrorState   from '../components/common/ErrorState'
 import EmptyState   from '../components/common/EmptyState'
@@ -15,13 +17,35 @@ export default function DetalleLibroPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const { data, loading, error, refetch } = useApi(() => getDetalleLibro(id), [id])
 
+  const [autores,     setAutores]     = useState([])
+  const [generos,     setGeneros]     = useState([])
+  const [editoriales, setEditoriales] = useState([])
+
+  useEffect(() => {
+    getAutores({ limit: 200 }).then(setAutores).catch(() => {})
+    getGeneros().then(setGeneros).catch(() => {})
+    getEditoriales({ limit: 200 }).then(setEditoriales).catch(() => {})
+  }, [])
+
+  function labelFor(list, idVal) {
+    const item = list.find((x) => String(x.id) === String(idVal))
+    return item ? (item.nombre || item.name || String(idVal)) : String(idVal)
+  }
+
   function renderValue(val) {
     if (val == null) return '—'
     if (typeof val === 'object') return JSON.stringify(val)
     return String(val)
   }
 
-  const libro = data
+  // El agregador devuelve { libro: {...}, rating_promedio, total_resenas, resenas }
+  const libroRaw = data?.libro ?? data
+  const libro = libroRaw ? {
+    ...libroRaw,
+    resenas:       data?.resenas       ?? libroRaw?.resenas,
+    rating:        data?.rating_promedio ?? libroRaw?.rating,
+    total_resenas: data?.total_resenas  ?? libroRaw?.total_resenas,
+  } : null
 
   return (
     <div className="page-container">
@@ -67,17 +91,17 @@ export default function DetalleLibroPage() {
                 </h2>
                 {(libro.autor || libro.author || libro.autor_nombre || libro.autor_id) && (
                   <p className="detail-card__meta">
-                    ✍️ {libro.autor || libro.author || libro.autor_nombre || `Autor ID: ${libro.autor_id}`}
+                    ✍️ {libro.autor || libro.author || libro.autor_nombre || labelFor(autores, libro.autor_id)}
                   </p>
                 )}
                 {(libro.genero || libro.genre || libro.genero_nombre || libro.genero_id) && (
                   <p className="detail-card__meta">
-                    🏷️ {libro.genero || libro.genre || libro.genero_nombre || `Género ID: ${libro.genero_id}`}
+                    🏷️ {libro.genero || libro.genre || libro.genero_nombre || labelFor(generos, libro.genero_id)}
                   </p>
                 )}
                 {(libro.editorial || libro.editorial_nombre || libro.editorial_id) && (
                   <p className="detail-card__meta">
-                    🏢 {libro.editorial || libro.editorial_nombre || `Editorial ID: ${libro.editorial_id}`}
+                    🏢 {libro.editorial || libro.editorial_nombre || labelFor(editoriales, libro.editorial_id)}
                   </p>
                 )}
                 {(libro.precio ?? libro.price) != null && (
