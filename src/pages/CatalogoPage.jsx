@@ -18,8 +18,8 @@ function normalizeItem(item) {
     genero:    item.genero    || item.genre    || item.genero_nombre || item.genero_id || '—',
     editorial: item.editorial || item.publisher || item.editorial_nombre || item.editorial_id || '—',
     precio:    item.precio    ?? item.price    ?? null,
-    ventas:    item.ventas    ?? item.total_ventas ?? item.sales ?? null,
-    rating:    item.rating    ?? item.promedio_rating ?? item.avg_rating ?? null,
+    resenas:   item.total_resenas ?? item.resenas_total ?? item.total_reviews ?? null,
+    rating:    item.rating    ?? item.rating_promedio ?? item.promedio_rating ?? item.avg_rating ?? null,
   }
 }
 
@@ -88,7 +88,7 @@ export default function CatalogoPage() {
                     <th>Autor</th>
                     <th>Género</th>
                     <th>Precio</th>
-                    <th>Ventas</th>
+                    <th>Reseñas</th>
                     <th>Rating</th>
                     <th></th>
                   </tr>
@@ -105,7 +105,7 @@ export default function CatalogoPage() {
                       <td>{item.autor}</td>
                       <td>{item.genero}</td>
                       <td>{item.precio != null ? `$${Number(item.precio).toFixed(2)}` : '—'}</td>
-                      <td>{item.ventas ?? '—'}</td>
+                      <td>{item.resenas ?? '—'}</td>
                       <td>{item.rating != null ? Number(item.rating).toFixed(1) : '—'}</td>
                       <td>
                         <Link to={`/libros/${item.id}`} className="btn btn--ghost btn--sm">

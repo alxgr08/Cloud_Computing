@@ -9,8 +9,9 @@ import CatalogoPage     from './pages/CatalogoPage'
 import PedidosPage      from './pages/PedidosPage'
 import ResenasPage      from './pages/ResenasPage'
 import AnalyticsPage    from './pages/AnalyticsPage'
-import DetalleLibroPage from './pages/DetalleLibroPage'
-import PerfilClientePage from './pages/PerfilClientePage'
+import DetalleLibroPage   from './pages/DetalleLibroPage'
+import DetallePedidoPage  from './pages/DetallePedidoPage'
+import PerfilClientePage   from './pages/PerfilClientePage'
 import ApiTestPage       from './pages/ApiTestPage'
 
 function NotFound() {
@@ -34,7 +35,7 @@ function App() {
           <Route path="/libros/:id"    element={<DetalleLibroPage />} />
           <Route path="/catalogo"      element={<CatalogoPage />} />
           <Route path="/pedidos"       element={<PedidosPage />} />
-          <Route path="/pedidos/:id"   element={<PedidosPage />} />
+          <Route path="/pedidos/:id"   element={<DetallePedidoPage />} />
           <Route path="/resenas"       element={<ResenasPage />} />
           <Route path="/analytics"     element={<AnalyticsPage />} />
           <Route path="/clientes/:id"  element={<PerfilClientePage />} />
